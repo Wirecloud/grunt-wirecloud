@@ -1,23 +1,23 @@
 {
-  "name": "grunt-contrib-wirecloud",
+  "name": "grunt-wirecloud",
   "description": "WireCloud utilities for grunt.",
   "version": "0.7.0",
-  "homepage": "https://github.com/Wirecloud/grunt-contrib-wirecloud",
+  "homepage": "https://github.com/Wirecloud/grunt-wirecloud",
   "author": {
     "name": "WireCloud Team",
     "url": "https://conwet.fi.upm.es/wirecloud"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Wirecloud/grunt-contrib-wirecloud"
+    "url": "https://github.com/Wirecloud/grunt-wirecloud"
   },
   "bugs": {
-    "url": "https://github.com/Wirecloud/grunt-contrib-wirecloud/issues"
+    "url": "https://github.com/Wirecloud/grunt-wirecloud/issues"
   },
   "licenses": [
     {
       "type": "Apache 2",
-      "url": "https://github.com/Wirecloud/grunt-contrib-wirecloud/blob/master/LICENSE"
+      "url": "https://github.com/Wirecloud/grunt-wirecloud/blob/master/LICENSE"
     }
   ],
   "engines": {
