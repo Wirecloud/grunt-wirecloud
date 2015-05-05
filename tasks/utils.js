@@ -1,4 +1,24 @@
-const webdriver = require('selenium-webdriver'),
+/*
+ * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*global Promise*/
+
+"use strict";
+
+var webdriver = require('selenium-webdriver'),
     By = require('selenium-webdriver').By,
     until = require('selenium-webdriver').until,
     URL = require('url'),
@@ -24,7 +44,7 @@ until.urlStartsWith = function urlStartsWith(base_url) {
 };
 
 var get_user_home = function get_user_home() {
-    return process.env[(process.platform == 'win32') ? 'USERPROFILE' : 'HOME'];
+    return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
 var get_config_file_name = function get_config_file_name() {
@@ -54,7 +74,7 @@ var get_final_token = function get_final_token(instance_name, instance_info, url
         'redirect_uri': redirect_uri
     };
     request({method: 'POST', url: url, form: body}, function (error, response, body) {
-        if (error || response.statusCode != 200) {
+        if (error || response.statusCode !== 200) {
             reject();
             return;
         }
@@ -84,19 +104,19 @@ var auth = function auth(instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
         request(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
-            if (error || response.statusCode != 200) {
+            if (error || response.statusCode !== 200) {
                 reject();
                 return;
             }
 
             var info = JSON.parse(body);
 
-            redirect_uri = instance_info.redirect_uri;
+            var redirect_uri = instance_info.redirect_uri;
             if (redirect_uri == null) {
                 redirect_uri = info.default_redirect_uri;
             }
 
-            auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
+            var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
 
             console.log("Redirect uri: " + redirect_uri);
             console.log("Redirecting to: " + auth_url);
@@ -152,19 +172,28 @@ module.exports.upload_mac = function upload_mac(instance_name, file) {
         get_token(instance_name).then(function (instance_info) {
             var headers = {
                 'Content-Type': 'application/octet-stream',
-                'Authorization': 'Bearer ' + instance_info.token_info.access_token,
-                'Content-Length': fs.statSync(file)['size']
+                'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
+            try {
+                headers['Content-Length'] = fs.statSync(file)['size'];
+            } catch (e) {
+                reject(e);
+            }
+
             var url = URL.resolve(instance_info.url, 'api/resources');
-            fs.createReadStream(file).pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
-                console.log(body);
-                if (error || [200, 201].indexOf(response.statusCode) === -1) {
-                    reject();
-                } else {
-                    resolve();
-                }
-            }));
+            var stream = fs.createReadStream(file);
+            stream.on('open', function () {
+                stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
+                    if (error || [200, 201].indexOf(response.statusCode) === -1) {
+                        reject('Unexpected response from server');
+                    } else {
+                        resolve();
+                    }
+                }));
+            });
+
+            stream.on('error', reject);
         }, reject);
     });
 
