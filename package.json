@@ -27,6 +27,7 @@
     "test": "grunt test"
   },
   "dependencies": {
+    "es6-promise": "^2.1.1",
     "jsonfile": "^2.0.0",
     "request": "^2.55.0",
     "selenium-webdriver": "^2.45.1"
