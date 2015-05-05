@@ -20,25 +20,28 @@ var utils = require('./utils');
 
 module.exports = function (grunt) {
 
-    grunt.registerMultiTask('wcupload', 'Upload Mashable Application Components to a wirecloud instance.', function() {
+    grunt.registerMultiTask('wirecloud', 'Upload Mashable Application Components to a wirecloud instance.', function() {
         var done = this.async();
 
         // Merge task-specific and/or target-specific options with these defaults.
         var options = this.options({
             force: false,
             reporterOutput: null,
-            instanceName: 'fiwarelab'
+            instance: 'fiwarelab'
         });
 
         // don't fail if there are problems uploading the MAC
         var force = options.force;
         delete options.force;
 
-        grunt.log.writeln('Uploading ' + options.file + ' to ' + options.instanceName);
-        utils.upload_mac(options.instanceName, options.file).then(function () {
+        var msg = 'Uploading ' + this.data.file + ' to ' + options.instance + '... ';
+        grunt.verbose.write(msg);
+        utils.upload_mac(options.instance, this.data.file).then(function () {
+            grunt.verbose.ok();
             done();
         }, function (e) {
-            grunt.log.writeln('Error uploading mashable application component: ' + e);
+            grunt.verbose.or.write(msg).error().error(e.message);
+            grunt.fail.warn('Error uploading mashable application component.');
             done(false);
         });
     });

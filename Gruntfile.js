@@ -37,10 +37,8 @@ module.exports = function(grunt) {
         },
 
         // Configuration to be run (and then tested).
-        wcupload: {
+        wirecloud: {
             default_options: {
-                options: {
-                },
                 file: 'fichero'
             },
             custom_options: {
@@ -64,7 +62,7 @@ module.exports = function(grunt) {
 
     // Whenever the "test" task is run, first clean the "tmp" dir, then run this
     // plugin's task(s), then test the result.
-    grunt.registerTask('test', ['clean', 'wcupload', 'nodeunit']);
+    grunt.registerTask('test', ['clean', 'wirecloud', 'nodeunit']);
 
     // By default, lint and run all tests.
     grunt.registerTask('default', ['jshint', 'test']);
