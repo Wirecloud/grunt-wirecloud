@@ -65,7 +65,7 @@ var read_config = function read_config() {
     }
 };
 
-var get_final_token = function get_final_token(instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
+var get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
     var body = {
         'code': code,
         'grant_type': 'authorization_code',
@@ -73,14 +73,28 @@ var get_final_token = function get_final_token(instance_name, instance_info, url
         'client_secret': instance_info.client_secret,
         'redirect_uri': redirect_uri
     };
-    request({method: 'POST', url: url, form: body}, function (error, response, body) {
-        if (error || response.statusCode !== 200) {
-            reject();
+
+    // Required for KeyRock 2.0
+    var headers = {
+        'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
+    };
+
+    grunt.log.verbose.writeln('Requesting final token...');
+    request({method: 'POST', url: url, headers: headers, form: body}, function (error, response, body) {
+        if (error) {
+            reject(error);
+            return;
+        }
+
+        if (response.statusCode !== 200) {
+            reject('Unexpected response from server');
             return;
         }
 
         var config = read_config();
         var token_info = JSON.parse(body);
+        instance_info.token_info = token_info;
+        grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
         // Store auth info
         if (typeof config.hosts !== 'object') {
@@ -100,7 +114,7 @@ var get_final_token = function get_final_token(instance_name, instance_info, url
 };
 
 
-var auth = function auth(instance_name, instance_info) {
+var auth = function auth(grunt, instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
         request(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
@@ -118,8 +132,8 @@ var auth = function auth(instance_name, instance_info) {
 
             var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
 
-            console.log("Redirect uri: " + redirect_uri);
-            console.log("Redirecting to: " + auth_url);
+            grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
+            grunt.log.verbose.writeln("Redirecting to: " + auth_url);
             var driver = new webdriver.Builder()
                 .forBrowser('firefox')
                 .build();
@@ -130,8 +144,8 @@ var auth = function auth(instance_name, instance_info) {
                 driver.quit();
                 current_url = URL.parse(current_url, true);
                 var code = current_url.query.code;
-                console.log('Code: ' + code);
-                get_final_token(instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
+                grunt.log.debug('Code: ' + code);
+                get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
             }, reject);
         });
     });
@@ -148,7 +162,7 @@ module.exports.create_instance = function create_instance(instance_name, url, cl
     auth(instance_name, instance_info).then(resolve, reject);
 };
 
-var get_token = function get_token(instance_name) {
+var get_token = function get_token(grunt, instance_name) {
     
     var config = read_config();
     if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
@@ -157,7 +171,7 @@ var get_token = function get_token(instance_name) {
             if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
                 resolve(instance_info);
             } else {
-                auth(instance_name, instance_info).then(resolve, reject);
+                auth(grunt, instance_name, instance_info).then(resolve, reject);
             }
         });
     } else {
@@ -166,10 +180,10 @@ var get_token = function get_token(instance_name) {
 };
 module.exports.get_token = get_token;
 
-module.exports.upload_mac = function upload_mac(instance_name, file) {
+module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
 
     return new Promise(function (resolve, reject) {
-        get_token(instance_name).then(function (instance_info) {
+        get_token(grunt, instance_name).then(function (instance_info) {
             var headers = {
                 'Content-Type': 'application/octet-stream',
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token

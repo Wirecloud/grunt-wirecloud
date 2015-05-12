@@ -35,13 +35,13 @@ module.exports = function (grunt) {
         delete options.force;
 
         var msg = 'Uploading ' + this.data.file + ' to ' + options.instance + '... ';
-        grunt.verbose.write(msg);
-        utils.upload_mac(options.instance, this.data.file).then(function () {
-            grunt.verbose.ok();
+        grunt.log.write(msg);
+        utils.upload_mac(grunt, options.instance, this.data.file).then(function () {
+            grunt.log.ok();
             done();
         }, function (e) {
-            grunt.verbose.or.write(msg).error().error(e.message);
-            grunt.fail.warn('Error uploading mashable application component.');
+            grunt.verbose.error().error(e.message);
+            grunt.log.error('Error uploading mashable application component.');
             done(false);
         });
     });
