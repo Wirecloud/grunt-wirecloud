@@ -25,7 +25,8 @@ var webdriver = require('selenium-webdriver'),
     request = require('request'),
     path = require('path'),
     jf = require('jsonfile'),
-    fs = require('fs');
+    fs = require('fs'),
+    inquirer = require('inquirer');
 
 
 until.urlStartsWith = function urlStartsWith(base_url) {
@@ -64,6 +65,59 @@ var read_config = function read_config() {
         }
     }
 };
+
+var get_final_token_using_password_credentials = function get_final_token_using_password_credentials(grunt, instance_name, instance_info, url, username, password, redirect_uri) {
+    return new Promise(function (resolve, reject) {
+        var body = {
+            'grant_type': 'password',
+            'redirect_uri': redirect_uri,
+            'username': username,
+            'password': password
+        };
+
+        // Required for KeyRock 2.0
+        var headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
+        };
+
+        grunt.log.debug('Basic auth: ' + headers.Authorization);
+        grunt.log.verbose.writeln('Requesting final token to ' + url + ' ...');
+        request({method: 'POST', url: url, headers: headers, form: body}, function (error, response, body) {
+            console.log(body);
+            if (error) {
+                reject(error);
+                return;
+            }
+
+            if (response.statusCode !== 200) {
+                reject('Unexpected response from server');
+                return;
+            }
+
+            var config = read_config();
+            var token_info = JSON.parse(body);
+            instance_info.token_info = token_info;
+            grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
+
+            // Store auth info
+            if (typeof config.hosts !== 'object') {
+                config.hosts = {};
+            }
+
+            if (typeof config.hosts[instance_name] !== 'object') {
+                config.hosts[instance_name] = instance_info;
+            }
+            config.hosts[instance_name].token_info = token_info;
+            //
+
+            jf.writeFileSync(get_config_file_name(), config);
+
+            resolve(instance_info);
+        });
+    });
+}
 
 var get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
     var body = {
@@ -125,28 +179,55 @@ var auth = function auth(grunt, instance_name, instance_info) {
 
             var info = JSON.parse(body);
 
-            var redirect_uri = instance_info.redirect_uri;
-            if (redirect_uri == null) {
-                redirect_uri = info.default_redirect_uri;
+            if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") != -1) {
+                var questions = [
+                    {
+                        type: "input",
+                        name: "username",
+                        message: "Username:",
+                        validate: function (value) {
+                            if (value === '') {
+                                return 'A value is required.';
+                            }
+                            return true;
+                        }
+                    },
+                    {
+                        type: "password",
+                        name: "password",
+                        message: "Password:"
+                    }
+                ];
+
+                grunt.log.writeln();
+                inquirer.prompt(questions, function (answers) {
+                    get_final_token_using_password_credentials(grunt, instance_name, instance_info, info.token_endpoint, answers.username, answers.password, redirect_uri).then(resolve, reject);
+                });
+
+            } else {
+                var redirect_uri = instance_info.redirect_uri;
+                if (redirect_uri == null) {
+                    redirect_uri = info.default_redirect_uri;
+                }
+
+                var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
+
+                grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
+                grunt.log.verbose.writeln("Redirecting to: " + auth_url);
+                var driver = new webdriver.Builder()
+                    .forBrowser('chrome')
+                    .build();
+
+                driver.get(auth_url);
+                driver.wait(until.urlStartsWith(redirect_uri), 24*60*60*1000);
+                driver.getCurrentUrl().then(function (current_url) {
+                    driver.quit();
+                    current_url = URL.parse(current_url, true);
+                    var code = current_url.query.code;
+                    grunt.log.debug('Code: ' + code);
+                    get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
+                }, reject);
             }
-
-            var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
-
-            grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
-            grunt.log.verbose.writeln("Redirecting to: " + auth_url);
-            var driver = new webdriver.Builder()
-                .forBrowser('firefox')
-                .build();
-
-            driver.get(auth_url);
-            driver.wait(until.urlStartsWith(redirect_uri), 24*60*60*1000);
-            driver.getCurrentUrl().then(function (current_url) {
-                driver.quit();
-                current_url = URL.parse(current_url, true);
-                var code = current_url.query.code;
-                grunt.log.debug('Code: ' + code);
-                get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
-            }, reject);
         });
     });
 
