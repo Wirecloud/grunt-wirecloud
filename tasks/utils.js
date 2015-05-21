@@ -91,7 +91,10 @@ var get_final_token_using_password_credentials = function get_final_token_using_
                 return;
             }
 
-            if (response.statusCode !== 200) {
+            if (response.statusCode === 401) {
+                reject('Invalid username or password');
+                return;
+            } else if (response.statusCode !== 200) {
                 reject('Unexpected response from server');
                 return;
             }
