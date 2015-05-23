@@ -85,7 +85,6 @@ var get_final_token_using_password_credentials = function get_final_token_using_
         grunt.log.debug('Basic auth: ' + headers.Authorization);
         grunt.log.verbose.writeln('Requesting final token to ' + url + ' ...');
         request({method: 'POST', url: url, headers: headers, form: body}, function (error, response, body) {
-            console.log(body);
             if (error) {
                 reject(error);
                 return;
@@ -148,12 +147,12 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
             return;
         }
 
-        var config = read_config();
         var token_info = JSON.parse(body);
         instance_info.token_info = token_info;
         grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
         // Store auth info
+        var config = read_config();
         if (typeof config.hosts !== 'object') {
             config.hosts = {};
         }
@@ -162,9 +161,8 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
             config.hosts[instance_name] = instance_info;
         }
         config.hosts[instance_name].token_info = token_info;
-        //
-
         jf.writeFileSync(get_config_file_name(), config);
+        //
 
         resolve(instance_info);
     });
@@ -246,21 +244,82 @@ module.exports.create_instance = function create_instance(instance_name, url, cl
     auth(instance_name, instance_info).then(resolve, reject);
 };
 
+var create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
+    return new Promise(function (resolve, reject) {
+        var questions = [
+            {
+                type: "input",
+                name: "url",
+                message: "WireCloud instance url:",
+                default: "https://mashup.lab.fiware.org"
+            },
+            {
+                type: "input",
+                name: "client_id",
+                message: "OAuth2 Client Id:"
+            },
+            {
+                type: "input",
+                name: "client_secret",
+                message: "OAuth2 Client Secret:"
+            }
+        ];
+
+        inquirer.prompt(questions, function (answers) {
+            var instance_info = {
+                url: answers.url,
+                client_id: answers.client_id,
+                client_secret: answers.client_secret
+            };
+
+            // Store auth info
+            var config = read_config();
+            if (typeof config.hosts !== 'object') {
+                config.hosts = {};
+            }
+
+            config.hosts[instance_name] = instance_info;
+            jf.writeFileSync(get_config_file_name(), config);
+            //
+
+            resolve(instance_info);
+        });
+    });
+};
+
 var get_token = function get_token(grunt, instance_name) {
     
-    var config = read_config();
-    if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
-        var instance_info = config.hosts[instance_name];
-        return new Promise(function (resolve, reject) {
+    return new Promise(function (resolve, reject) {
+        var config = read_config();
+        if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
+            var instance_info = config.hosts[instance_name];
             if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
                 resolve(instance_info);
             } else {
                 auth(grunt, instance_name, instance_info).then(resolve, reject);
             }
-        });
-    } else {
-        throw new Error('Invalid instance');
-    }
+        } else {
+            var questions = [
+                {
+                    type: "confirm",
+                    name: "continue",
+                    message: "WireCloud instance " + instance_name + " does not exist, do you want to create it?",
+                    default: false
+                }
+            ];
+
+            grunt.log.writeln();
+            inquirer.prompt(questions, function (answers) {
+                if (answers.continue) {
+                    create_instance_interactive(grunt, instance_name).then(function (instance_info) {
+                        auth(grunt, instance_name, instance_info).then(resolve, reject);
+                    }, reject);
+                } else {
+                    reject('Invalid instance: ' + instance_name);
+                }
+            });
+        }
+    });
 };
 module.exports.get_token = get_token;
 

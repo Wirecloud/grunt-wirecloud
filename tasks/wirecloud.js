@@ -40,7 +40,11 @@ module.exports = function (grunt) {
             grunt.log.ok();
             done();
         }, function (e) {
-            grunt.verbose.error().error(e.message);
+            if (typeof e === 'string') {
+                grunt.verbose.error().error(e);
+            } else {
+                grunt.verbose.error().error(e.message);
+            }
             grunt.log.error('Error uploading mashable application component.');
             done(false);
         });
