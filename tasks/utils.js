@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-/*global Promise*/
-
 "use strict";
+
+var Promise = require('es6-promise').Promise;
 
 var webdriver = require('selenium-webdriver'),
     By = require('selenium-webdriver').By,
@@ -119,7 +119,7 @@ var get_final_token_using_password_credentials = function get_final_token_using_
             resolve(instance_info);
         });
     });
-}
+};
 
 var get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
     var body = {
@@ -180,7 +180,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
 
             var info = JSON.parse(body);
 
-            if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") != -1) {
+            if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") !== -1) {
                 var questions = [
                     {
                         type: "input",
