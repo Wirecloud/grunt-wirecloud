@@ -45,6 +45,9 @@
   "keywords": [
     "gruntplugin"
   ],
+  "files": [
+    "tasks"
+  ],
   "maintainers": [
     {
       "name": "Álvaro Arranz",
