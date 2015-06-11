@@ -19,68 +19,36 @@ grunt.loadNpmTasks('grunt-wirecloud');
 
 ## The "wirecloud" task
 
-### Overview
-In your project's Gruntfile, add a section named `wirecloud` to the data object passed into `grunt.initConfig()`.
+_Run this task with the `grunt wirecloud` command._
 
-```js
-grunt.initConfig({
-    wirecloud: {
-        options: {
-            // Task-specific options go here.
-        },
-        your_target: {
-            // Target-specific file lists and/or options go here.
-        },
-    },
-});
-```
+Task targets and options may be specified according to the grunt [Configuring tasks](http://gruntjs.com/configuring-tasks) guide.
 
 ### Options
 
-#### options.separator
+#### options.instance
 Type: `String`
-Default value: `',  '`
+Default value: `'fiwarelab'`
 
-A string value that is used to do something with whatever.
-
-#### options.punctuation
-Type: `String`
-Default value: `'.'`
-
-A string value that is used to do something else with whatever else.
+Name of the WireCloud instance where the components are going to be uploaded.
 
 ### Usage Examples
 
 #### Default Options
-In this example, the default options are used to do something with whatever. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result would be `Testing, 1 2 3.`
+
+In this example, the default options are used to upload 'build/component.wgt'. So the 'build/component.wgt' file will be uploaded to the 'fiwarelab' instance.
 
 ```js
 grunt.initConfig({
     wirecloud: {
-        options: {},
-        file: 'build/',
+        default: {
+            file: 'build/component.wgt'
+        }
     },
-});
-```
-
-#### Custom Options
-In this example, custom options are used to do something else with whatever else. So if the `testing` file has the content `Testing` and the `123` file had the content `1 2 3`, the generated result in this case would be `Testing: 1 2 3 !!!`
-
-```js
-grunt.initConfig({
-  wirecloud: {
-    options: {
-      separator: ': ',
-      punctuation: ' !!!',
-    },
-    files: {
-      'dest/default_options': ['src/testing', 'src/123'],
-    },
-  },
 });
 ```
 
 ## Contributing
+
 In lieu of a formal styleguide, take care to maintain the existing coding style. Add unit tests for any new or changed functionality. Lint and test your code using [Grunt](http://gruntjs.com/).
 
 ## Release History
