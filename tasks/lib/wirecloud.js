@@ -44,6 +44,15 @@ until.urlStartsWith = function urlStartsWith(base_url) {
     );
 };
 
+
+var validate_no_empty = function validate_no_empty(value) {
+    if (value === '') {
+        return 'A value is required.';
+    }
+    return true;
+};
+
+
 var get_user_home = function get_user_home() {
     return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
@@ -186,12 +195,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
                         type: "input",
                         name: "username",
                         message: "Username:",
-                        validate: function (value) {
-                            if (value === '') {
-                                return 'A value is required.';
-                            }
-                            return true;
-                        }
+                        validate: validate_no_empty
                     },
                     {
                         type: "password",
@@ -256,12 +260,14 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
             {
                 type: "input",
                 name: "client_id",
-                message: "OAuth2 Client Id:"
+                message: "OAuth2 Client Id:",
+                validate: validate_no_empty
             },
             {
                 type: "input",
                 name: "client_secret",
-                message: "OAuth2 Client Secret:"
+                message: "OAuth2 Client Secret:",
+                validate: validate_no_empty
             }
         ];
 
