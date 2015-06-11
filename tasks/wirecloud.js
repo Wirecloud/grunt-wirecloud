@@ -34,6 +34,11 @@ module.exports = function (grunt) {
         var force = options.force;
         delete options.force;
 
+        if (typeof this.data.file !== 'string') {
+            grunt.log.error('Missing info about the file to upload');
+            return done(false);
+        }
+
         var msg = 'Uploading ' + this.data.file + ' to ' + options.instance + '... ';
         grunt.log.write(msg);
         utils.upload_mac(grunt, options.instance, this.data.file).then(function () {
