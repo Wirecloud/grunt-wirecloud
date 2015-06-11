@@ -16,7 +16,7 @@
 
 'use strict';
 
-var utils = require('./utils');
+var utils = require('./lib/wirecloud');
 
 module.exports = function (grunt) {
 
