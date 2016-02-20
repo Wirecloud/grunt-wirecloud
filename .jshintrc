@@ -10,5 +10,10 @@
   "boss": true,
   "eqnull": true,
   "node": true,
-  "esnext": true
+  "esnext": true,
+  "globals": {
+      "describe": true,
+      "it": true,
+      "beforeEach": true
+  }
 }

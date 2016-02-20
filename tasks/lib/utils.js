@@ -294,7 +294,7 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
 };
 
 var get_token = function get_token(grunt, instance_name) {
-    
+
     return new Promise(function (resolve, reject) {
         var config = read_config();
         if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
@@ -361,3 +361,50 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
     });
 
 };
+
+module.exports.delete_mac = function delete_mac(grunt, instance_name, mac_name, mac_vendor, mac_version) {
+    return new Promise(function (resolve, reject) {
+        get_token(grunt, instance_name).then(function (instance_info) {
+            var headers = {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + instance_info.token_info.access_token
+            };
+
+
+            var url = URL.resolve(instance_info.url, 'api/resource');
+            url = url + '/' + mac_vendor + '/' + mac_name + '/' + mac_version + '?affected=true';
+            request.del({"url": url, "headers": headers}, function (error, response) {
+                if (error || [200, 201].indexOf(response.statusCode) === -1) {
+                    reject('Unexpected response from server');
+                } else {
+                    resolve();
+                }
+            });
+        }, reject);
+    });
+}
+
+module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, mac_vendor, mac_version) {
+    return new Promise(function (resolve, reject) {
+        get_token(grunt, instance_name).then(function (instance_info) {
+            var headers = {
+                'Accept': 'application/json',
+                'Authorization': 'Bearer ' + instance_info.token_info.access_token
+            };
+
+            var url = URL.resolve(instance_info.url, 'api/resource');
+            url = url + '/' + mac_vendor + '/' + mac_name + '/' + mac_version;
+            request.head({"url": url, "headers": headers}, function (error, response) {
+                if ([200].indexOf(response.statusCode) !== -1) {
+                    resolve(true);
+                }
+                else if ([404].indexOf(response.statusCode) !== -1) {
+                    resolve(false);
+                }
+                else {
+                    reject('Unexpected response from server');
+                }
+            });
+        }, reject);
+    });
+}
