@@ -93,7 +93,7 @@ var get_final_token_using_password_credentials = function get_final_token_using_
 
         grunt.log.debug('Basic auth: ' + headers.Authorization);
         grunt.log.verbose.writeln('Requesting final token to ' + url + ' ...');
-        request({method: 'POST', url: url, headers: headers, form: body}, function (error, response, body) {
+        request.post({url: url, headers: headers, form: body}, function (error, response, body) {
             if (error) {
                 reject(error);
                 return;
@@ -112,14 +112,6 @@ var get_final_token_using_password_credentials = function get_final_token_using_
             instance_info.token_info = token_info;
             grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
-            // Store auth info
-            if (typeof config.hosts !== 'object') {
-                config.hosts = {};
-            }
-
-            if (typeof config.hosts[instance_name] !== 'object') {
-                config.hosts[instance_name] = instance_info;
-            }
             config.hosts[instance_name].token_info = token_info;
             //
 
@@ -145,7 +137,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
     };
 
     grunt.log.verbose.writeln('Requesting final token...');
-    request({method: 'POST', url: url, headers: headers, form: body}, function (error, response, body) {
+    request.post({url: url, headers: headers, form: body}, function (error, response, body) {
         if (error) {
             reject(error);
             return;
@@ -162,13 +154,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
 
         // Store auth info
         var config = read_config();
-        if (typeof config.hosts !== 'object') {
-            config.hosts = {};
-        }
 
-        if (typeof config.hosts[instance_name] !== 'object') {
-            config.hosts[instance_name] = instance_info;
-        }
         config.hosts[instance_name].token_info = token_info;
         jf.writeFileSync(get_config_file_name(), config);
         //
@@ -181,7 +167,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
 var auth = function auth(grunt, instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
-        request(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
+        request.get(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
             if (error || response.statusCode !== 200) {
                 reject();
                 return;
@@ -219,9 +205,9 @@ var auth = function auth(grunt, instance_name, instance_info) {
 
                 grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
                 grunt.log.verbose.writeln("Redirecting to: " + auth_url);
-                var driver = new webdriver.Builder()
-                    .forBrowser('chrome')
-                    .build();
+                var driver = new webdriver.Builder();
+                driver.forBrowser('chrome');
+                driver.build();
 
                 driver.get(auth_url);
                 driver.wait(until.urlStartsWith(redirect_uri), 24*60*60*1000);
@@ -236,16 +222,6 @@ var auth = function auth(grunt, instance_name, instance_info) {
         });
     });
 
-};
-
-module.exports.create_instance = function create_instance(instance_name, url, client_id, client_secret, resolve, reject) {
-    var instance_info = {
-        url: url,
-        client_id: client_id,
-        client_secret: client_secret
-    };
-
-    auth(instance_name, instance_info).then(resolve, reject);
 };
 
 var create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
@@ -344,7 +320,7 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
                 reject(e);
             }
 
-            var url = URL.resolve(instance_info.url, 'api/resources');
+            var url = instance_info.url + '/api/resources';
             var stream = fs.createReadStream(file);
             stream.on('open', function () {
                 stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
@@ -371,8 +347,11 @@ module.exports.delete_mac = function delete_mac(grunt, instance_name, mac_name, 
             };
 
 
-            var url = URL.resolve(instance_info.url, 'api/resource');
-            url = url + '/' + mac_vendor + '/' + mac_name + '/' + mac_version + '?affected=true';
+            var url = instance_info.url + '/api/resource' +
+                        '/' + mac_vendor +
+                        '/' + mac_name +
+                        '/' + mac_version +
+                        '?affected=true';
             request.del({"url": url, "headers": headers}, function (error, response) {
                 if (error || [200, 201].indexOf(response.statusCode) === -1) {
                     reject('Unexpected response from server');
@@ -392,8 +371,10 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
-            var url = URL.resolve(instance_info.url, 'api/resource');
-            url = url + '/' + mac_vendor + '/' + mac_name + '/' + mac_version;
+            var url = instance_info.url + '/api/resource' +
+                        '/' + mac_vendor +
+                        '/' + mac_name +
+                        '/' + mac_version;
             request.head({"url": url, "headers": headers}, function (error, response) {
                 if ([200].indexOf(response.statusCode) !== -1) {
                     resolve(true);
