@@ -31,6 +31,13 @@ Default value: `'fiwarelab'`
 
 Name of the WireCloud instance where the components are going to be uploaded.
 
+#### options.overwrite
+Type: `Boolean`
+Default value: `false`
+
+If the same version of the Mashable Applacation Component is currently uploaded to the instance, delete it and upload it again.
+>**NOTE**: If this option is set to false and the component already exists, nothing will be done.
+
 ### Usage Examples
 
 #### Default Options
