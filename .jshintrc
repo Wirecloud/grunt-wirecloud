@@ -11,9 +11,9 @@
   "eqnull": true,
   "node": true,
   "esnext": true,
+  "mocha": true,
+  "expr": true,
   "globals": {
-      "describe": true,
-      "it": true,
-      "beforeEach": true
+    "Promise": true
   }
 }

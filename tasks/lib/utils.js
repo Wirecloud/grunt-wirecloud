@@ -174,6 +174,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
             }
 
             var info = JSON.parse(body);
+            var redirect_uri;
 
             if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") !== -1) {
                 var questions = [
@@ -196,7 +197,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
                 });
 
             } else {
-                var redirect_uri = instance_info.redirect_uri;
+                redirect_uri = instance_info.redirect_uri;
                 if (redirect_uri == null) {
                     redirect_uri = info.default_redirect_uri;
                 }
@@ -361,7 +362,7 @@ module.exports.delete_mac = function delete_mac(grunt, instance_name, mac_name, 
             });
         }, reject);
     });
-}
+};
 
 module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, mac_vendor, mac_version) {
     return new Promise(function (resolve, reject) {
@@ -388,4 +389,4 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
             });
         }, reject);
     });
-}
+};

@@ -40,9 +40,9 @@ describe('Wirecloud Task', function () {
     }
 
     function stubOperation(method, response, body, error) {
-        var cb = function (obj, func) {func(error, response, body)};
+        var cb = function (obj, func) {func(error, response, body);};
         sinon.stub(request, method, cb);
-    };
+    }
 
     describe('Token management', function () {
 
@@ -161,7 +161,7 @@ describe('Wirecloud Task', function () {
                             get: function () {},
                             wait: function () {},
                             quit: function () {},
-                            getCurrentUrl: function () {return new Promise(function (resolve, reject) {resolve();})}
+                            getCurrentUrl: function () {return new Promise(function (resolve, reject) {resolve();});}
                         };
                     });
                     sinon.stub(until, 'urlStartsWith', function () {});
@@ -369,17 +369,6 @@ describe('Wirecloud Task', function () {
 
         describe('Upload Operation', function () {
 
-            beforeEach(function () {
-                stubStream('open');
-            });
-
-            afterEach(function () {
-                restoreStream();
-                if (request.post.restore) {
-                    request.post.restore();
-                }
-            });
-
             function stubStream(event) {
                 // Stub ReadStream.prototype 'on' and 'pipe' methods
                 var Obj = {
@@ -388,10 +377,10 @@ describe('Wirecloud Task', function () {
                             cb();
                         }
                     },
-                    pipe: function (cb) {cb()}
+                    pipe: function (cb) {cb();}
                 };
-                sinon.stub(fs, 'createReadStream', function () { return Obj});
-                sinon.stub(fs, 'statSync', function () {return {size: 1}});
+                sinon.stub(fs, 'createReadStream', function () { return Obj;});
+                sinon.stub(fs, 'statSync', function () {return {size: 1};});
             }
 
             function restoreStream() {
@@ -402,6 +391,17 @@ describe('Wirecloud Task', function () {
                     fs.statSync.restore();
                 }
             }
+
+            beforeEach(function () {
+                stubStream('open');
+            });
+
+            afterEach(function () {
+                restoreStream();
+                if (request.post.restore) {
+                    request.post.restore();
+                }
+            });
 
             it('should upload a new MAC', function () {
                 stubOperation('post', {statusCode: 200});
