@@ -17,6 +17,7 @@
 'use strict';
 
 var utils = require('./lib/utils');
+var ConfigParser = require('node-wirecloud-config-parser');
 
 module.exports = function (grunt) {
 
@@ -38,7 +39,8 @@ module.exports = function (grunt) {
             force: false,
             reporterOutput: null,
             instance: 'fiwarelab',
-            overwrite: false
+            overwrite: false,
+            configFile: './src/config.xml'
         });
 
         // don't fail if there are problems uploading the MAC
@@ -55,17 +57,21 @@ module.exports = function (grunt) {
         var canDelete = false;
 
         if (options.overwrite) {
-            if (options.mac_name !== undefined && options.mac_vendor !== undefined && options.mac_version !== undefined) {
+            var configParser = new ConfigParser();
+            configParser.setFile(options.configFile).then(function () {
+                var name = options.mac_name ? options.mac_name : configParser.getName();
+                var vendor = options.mac_vendor ? options.mac_vendor : configParser.getVendor();
+                var version = options.mac_version ? options.mac_version : configParser.getVersion();
 
                 // Check if MAC is already uploaded
-                utils.mac_exists(grunt, options.instance, options.mac_name, options.mac_vendor, options.mac_version).then(function (exists) {
+                utils.mac_exists(grunt, options.instance, name, vendor, version).then(function (exists) {
                     canDelete = exists;
                 })
 
                 // Delete MAC if already uploaded
                 .then(function () {
                     if (canDelete) {
-                        return utils.delete_mac(grunt, options.instance, options.mac_name, options.mac_vendor, options.mac_version);
+                        return utils.delete_mac(grunt, options.instance, name, vendor, version);
                     }
                 })
 
@@ -80,12 +86,9 @@ module.exports = function (grunt) {
 
                 // Error catcher for all previous promises
                 .catch(error.bind(null, done));
-            }
-            else {
-                grunt.verbose.error().error('MAC name, vendor and/or version missing');
-                grunt.log.error('Error uploading mashable application component.');
-                done(false);
-            }
+            }.bind(this))
+
+            .catch(grunt.log.error);
         }
 
         // overwrite: false
