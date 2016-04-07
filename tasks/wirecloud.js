@@ -52,7 +52,8 @@ module.exports = function (grunt) {
             return done(false);
         }
 
-        var msg = 'Uploading ' + this.data.file + ' to ' + options.instance + '... ';
+        var instance = grunt.option('target') ? grunt.option('target') : options.instance;
+        var msg = 'Uploading ' + this.data.file + ' to ' + instance + '... ';
         grunt.log.write(msg);
         var canDelete = false;
 
@@ -64,19 +65,19 @@ module.exports = function (grunt) {
                 var version = options.mac_version ? options.mac_version : configParser.getVersion();
 
                 // Check if MAC is already uploaded
-                utils.mac_exists(grunt, options.instance, name, vendor, version).then(function (exists) {
+                utils.mac_exists(grunt, instance, name, vendor, version).then(function (exists) {
                     canDelete = exists;
                 })
 
                 // Delete MAC if already uploaded
                 .then(function () {
                     if (canDelete) {
-                        return utils.delete_mac(grunt, options.instance, name, vendor, version);
+                        return utils.delete_mac(grunt, instance, name, vendor, version);
                     }
                 })
 
                 // Upload new MAC
-                .then(utils.upload_mac.bind(this, grunt, options.instance, this.data.file))
+                .then(utils.upload_mac.bind(this, grunt, instance, this.data.file))
 
                 // OK message and finish
                 .then(function () {
