@@ -9,17 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Wirecloud/grunt-wirecloud"
+    "url": "https://github.com/Wirecloud/grunt-wirecloud.git"
   },
   "bugs": {
     "url": "https://github.com/Wirecloud/grunt-wirecloud/issues"
   },
-  "licenses": [
-    {
-      "type": "Apache 2",
-      "url": "https://github.com/Wirecloud/grunt-wirecloud/blob/master/LICENSE"
-    }
-  ],
+  "license": "Apache-2.0",
   "engines": {
     "node": ">= 0.8.0"
   },
