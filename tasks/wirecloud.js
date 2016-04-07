@@ -17,7 +17,7 @@
 'use strict';
 
 var utils = require('./lib/utils');
-var ConfigParser = require('node-wirecloud-config-parser');
+var ConfigParser = require('wirecloud-config-parser');
 
 module.exports = function (grunt) {
 
