@@ -55,41 +55,42 @@ module.exports = function (grunt) {
         var instance = grunt.option('target') ? grunt.option('target') : options.instance;
         var msg = 'Uploading ' + this.data.file + ' to ' + instance + '... ';
         grunt.log.write(msg);
-        var canDelete = false;
 
         if (options.overwrite) {
-            var configParser = new ConfigParser();
-            configParser.setFile(options.configFile).then(function () {
-                var name = options.mac_name ? options.mac_name : configParser.getName();
-                var vendor = options.mac_vendor ? options.mac_vendor : configParser.getVendor();
-                var version = options.mac_version ? options.mac_version : configParser.getVersion();
+            var configParser;
+            try {
+                configParser = new ConfigParser(options.configFile, true);
+            } catch (e) {
+                error(done, e);
+            }
+            var configData = configParser.getData();
+            var name = options.mac_name ? options.mac_name : configData.name;
+            var vendor = options.mac_vendor ? options.mac_vendor : configData.vendor;
+            var version = options.mac_version ? options.mac_version : configData.version;
 
-                // Check if MAC is already uploaded
-                utils.mac_exists(grunt, instance, name, vendor, version).then(function (exists) {
-                    canDelete = exists;
-                })
+            // Check if MAC is already uploaded
+            utils.mac_exists(grunt, instance, name, vendor, version).then(function (exists) {
+                return exists;
+            })
 
-                // Delete MAC if already uploaded
-                .then(function () {
-                    if (canDelete) {
-                        return utils.delete_mac(grunt, instance, name, vendor, version);
-                    }
-                })
+            // Delete MAC if already uploaded
+            .then(function () {
+                if (canDelete) {
+                    return utils.delete_mac(grunt, instance, name, vendor, version);
+                }
+            })
 
-                // Upload new MAC
-                .then(utils.upload_mac.bind(this, grunt, instance, this.data.file))
+            // Upload new MAC
+            .then(utils.upload_mac.bind(this, grunt, instance, this.data.file))
 
-                // OK message and finish
-                .then(function () {
-                    grunt.log.ok();
-                    done();
-                })
+            // OK message and finish
+            .then(function () {
+                grunt.log.ok();
+                done();
+            })
 
-                // Error catcher for all previous promises
-                .catch(error.bind(null, done));
-            }.bind(this))
-
-            .catch(grunt.log.error);
+            // Error catcher for all previous promises
+            .catch(error.bind(null, done));
         }
 
         // overwrite: false
