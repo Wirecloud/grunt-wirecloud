@@ -36,16 +36,10 @@ module.exports = function (grunt) {
 
         // Merge task-specific and/or target-specific options with these defaults.
         var options = this.options({
-            force: false,
             reporterOutput: null,
             instance: 'fiwarelab',
-            overwrite: false,
-            configFile: './src/config.xml'
+            overwrite: false
         });
-
-        // don't fail if there are problems uploading the MAC
-        var force = options.force;
-        delete options.force;
 
         if (typeof this.data.file !== 'string') {
             grunt.log.error('Missing info about the file to upload');
