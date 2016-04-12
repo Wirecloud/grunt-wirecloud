@@ -31,21 +31,6 @@ module.exports = function(grunt) {
             }
         },
 
-        // Configuration to be run (and then tested).
-        wirecloud: {
-            options: {
-                mac_name: 'Me',
-                mac_version: '1',
-                mac_vendor: 'You',
-                overwrite: true
-            },
-            default_options: {
-                file: 'fichero'
-            },
-            custom_options: {
-            }
-        },
-
         clean: {
             coverage: {
                 src: ['coverage/']
