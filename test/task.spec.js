@@ -69,7 +69,7 @@ describe('Wirecloud Task', function () {
                 request.get.restore();
             });
 
-            describe('With password', function () {
+            describe('Using password', function () {
 
                 beforeEach(function () {
                     sinon.stub(inquirer, 'prompt', function (questions, cb) {
@@ -150,7 +150,7 @@ describe('Wirecloud Task', function () {
                 });
             });
 
-            describe('With Token', function () {
+            describe('Using Token', function () {
 
                 beforeEach(function () {
                     stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
@@ -298,7 +298,7 @@ describe('Wirecloud Task', function () {
             });
         });
 
-        describe('Delete Operation', function () {
+        describe('Delete', function () {
 
             afterEach(function () {
                 request.del.restore();
@@ -326,7 +326,7 @@ describe('Wirecloud Task', function () {
             });
         });
 
-        describe('Check Operation', function () {
+        describe('Check', function () {
 
             afterEach(function () {
                 request.head.restore();
@@ -368,7 +368,7 @@ describe('Wirecloud Task', function () {
             });
         });
 
-        describe('Upload Operation', function () {
+        describe('Upload', function () {
 
             function stubStream(event) {
                 // Stub ReadStream.prototype 'on' and 'pipe' methods
