@@ -19,6 +19,7 @@
 var Promise = require('es6-promise').Promise;
 
 var webdriver = require('selenium-webdriver'),
+    AdmZip = require('adm-zip'),
     By = require('selenium-webdriver').By,
     until = require('selenium-webdriver').until,
     URL = require('url'),
@@ -389,4 +390,22 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
             });
         }, reject);
     });
+};
+
+module.exports.getConfigData = function (path) {
+    var content, wgtData;
+    try {
+        wgtData = new AdmZip(path);
+    } catch (e) {
+        throw e;
+    }
+    wgtData.getEntries().forEach(function (entry) {
+        if (entry.entryName === 'config.xml') {
+            content = entry.getData().toString();
+        }
+    });
+    if (!content) {
+        throw new Error('Zip file did not contain a config.xml file');
+    }
+    return content;
 };

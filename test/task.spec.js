@@ -13,6 +13,7 @@ var inquirer = require('inquirer');
 var webdriver = require('selenium-webdriver');
 var until = require('selenium-webdriver').until;
 var URL = require('url');
+var AdmZip = require('adm-zip');
 
 chai.use(chaiAsPromised);
 
@@ -444,6 +445,23 @@ describe('Wirecloud Task', function () {
                 var promise = WirecloudTask.upload_mac(grunt, "some_instance", "File").then(function () {});
                 expect(promise).to.be.rejected;
             });
+        });
+    });
+
+    describe('Config file', function () {
+        it('should get config data from zip file', function () {
+            var zip = new AdmZip('test/fixtures/correct.wgt');
+            var expectedData = zip.getEntries()[0].getData().toString();
+            var actualData = WirecloudTask.getConfigData('test/fixtures/correct.wgt');
+            expect(expectedData).to.equal(actualData);
+        });
+
+        it('should fail if zip file does not exist', function () {
+            expect(WirecloudTask.getConfigData.bind(null, 'test/fixtures/none.wgt')).to.throw('Invalid filename');
+        });
+
+        it('should fail if zip file does not contain a config file', function () {
+            expect(WirecloudTask.getConfigData.bind(null, 'test/fixtures/no_config.wgt')).to.throw(Error, 'Zip file did not contain a config.xml file');
         });
     });
 });

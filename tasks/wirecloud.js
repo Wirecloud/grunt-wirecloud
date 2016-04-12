@@ -55,28 +55,26 @@ module.exports = function (grunt) {
         var instance = grunt.option('target') ? grunt.option('target') : options.instance;
         var msg = 'Uploading ' + this.data.file + ' to ' + instance + '... ';
         grunt.log.write(msg);
+        var content = utils.getConfigData(this.data.file);
 
         if (options.overwrite) {
             var configParser;
             try {
-                configParser = new ConfigParser(options.configFile, true);
+                configParser = new ConfigParser({content: content, validate: true});
             } catch (e) {
                 error(done, e);
             }
             var configData = configParser.getData();
-            var name = options.mac_name ? options.mac_name : configData.name;
-            var vendor = options.mac_vendor ? options.mac_vendor : configData.vendor;
-            var version = options.mac_version ? options.mac_version : configData.version;
 
             // Check if MAC is already uploaded
-            utils.mac_exists(grunt, instance, name, vendor, version).then(function (exists) {
+            utils.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version).then(function (exists) {
                 return exists;
             })
 
             // Delete MAC if already uploaded
-            .then(function () {
-                if (canDelete) {
-                    return utils.delete_mac(grunt, instance, name, vendor, version);
+            .then(function (exists) {
+                if (exists) {
+                    return utils.delete_mac(grunt, instance, configData.name, configData.vendor, configData.version);
                 }
             })
 
