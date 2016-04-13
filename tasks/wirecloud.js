@@ -49,7 +49,12 @@ module.exports = function (grunt) {
         var instance = grunt.option('target') ? grunt.option('target') : options.instance;
         var msg = 'Uploading ' + this.data.file + ' to ' + instance + '... ';
         grunt.log.write(msg);
-        var content = utils.getConfigData(this.data.file);
+        var content = null;
+        try {
+            content = utils.getConfigData(this.data.file);
+        } catch (e) {
+            return error(done, e);
+        }
 
         if (options.overwrite) {
             var configParser;
