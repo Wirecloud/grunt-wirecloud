@@ -327,7 +327,7 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
             stream.on('open', function () {
                 stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
                     if (error || [200, 201].indexOf(response.statusCode) === -1) {
-                        reject('Unexpected response from server');
+                        reject(error);
                     } else {
                         resolve();
                     }
@@ -355,7 +355,7 @@ module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_
                         '?affected=true';
             request.del({"url": url, "headers": headers}, function (error, response) {
                 if (error || [200, 201].indexOf(response.statusCode) === -1) {
-                    reject('Unexpected response from server');
+                    reject(error);
                 } else {
                     resolve();
                 }
@@ -384,7 +384,7 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
                     resolve(false);
                 }
                 else {
-                    reject('Unexpected response from server');
+                    reject(error);
                 }
             });
         }, reject);
