@@ -28,7 +28,7 @@
     "jsonfile": "^2.0.0",
     "request": "^2.55.0",
     "selenium-webdriver": "^2.45.1",
-    "wirecloud-config-parser": "^0.1.0"
+    "wirecloud-config-parser": "^0.2.0"
   },
   "devDependencies": {
     "chai": "^3.5.0",
