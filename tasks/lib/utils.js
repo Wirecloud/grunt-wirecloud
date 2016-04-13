@@ -340,14 +340,13 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
 
 };
 
-module.exports.delete_mac = function delete_mac(grunt, instance_name, mac_name, mac_vendor, mac_version) {
+module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_name, mac_vendor, mac_version) {
     return new Promise(function (resolve, reject) {
         get_token(grunt, instance_name).then(function (instance_info) {
             var headers = {
                 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
-
 
             var url = instance_info.url + '/api/resource' +
                         '/' + mac_vendor +

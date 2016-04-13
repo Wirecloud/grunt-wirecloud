@@ -68,7 +68,7 @@ module.exports = function (grunt) {
             // Delete MAC if already uploaded
             .then(function (exists) {
                 if (exists) {
-                    return utils.delete_mac(grunt, instance, configData.name, configData.vendor, configData.version);
+                    return utils.uninstall_mac(grunt, instance, configData.name, configData.vendor, configData.version);
                 }
             })
 

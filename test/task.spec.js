@@ -306,21 +306,21 @@ describe('Wirecloud Task', function () {
 
             it('should delete a MAC', function () {
                 stubOperation('del', {statusCode:200});
-                return WirecloudTask.delete_mac(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
+                return WirecloudTask.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
                     expect(request.del.called).to.equal(true);
                 });
             });
 
             it('should fail to delete when server responds with error', function () {
                 stubOperation('del', {statusCode:404, error: {}});
-                var promise = WirecloudTask.delete_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
+                var promise = WirecloudTask.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
                 return expect(promise).to.be.rejectedWith('Unexpected response from server');
             });
 
             it('should fail to delete when given an unknown instance name', function () {
                 stubOperation('del', null);
                 sinon.stub(inquirer, 'prompt', function () {});
-                WirecloudTask.delete_mac(grunt, 'unknown_instance', 'name', 'vendor', 'version');
+                WirecloudTask.uninstall_mac(grunt, 'unknown_instance', 'name', 'vendor', 'version');
                 expect(inquirer.prompt.called).to.equal(true);
                 inquirer.prompt.restore();
             });
