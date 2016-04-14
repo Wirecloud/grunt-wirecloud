@@ -330,38 +330,38 @@ describe('Wirecloud Task', function () {
         describe('Check', function () {
 
             afterEach(function () {
-                request.head.restore();
+                request.get.restore();
             });
 
             it('should check if a MAC exists', function () {
-                stubOperation('head', {statusCode:200});
+                stubOperation('get', {statusCode:200});
                 return WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
-                    expect(request.head.called).to.equal(true);
+                    expect(request.get.called).to.equal(true);
                 });
             });
 
             it ('should return true if the server responds with 200 (MAC exist)', function () {
-                stubOperation('head', {statusCode:200});
+                stubOperation('get', {statusCode:200});
                 return WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function (exists) {
                     expect(exists).to.equal(true);
                 });
             });
 
             it('should return false if the server responds with 404 (MAC does not exist)', function () {
-                stubOperation('head', {statusCode:404, error: {}});
+                stubOperation('get', {statusCode:404, error: {}});
                 return WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function (exists) {
                     expect(exists).to.equal(false);
                 });
             });
 
             it('should fail to check a MAC when server responds with error other than 404', function () {
-                stubOperation('head', {statusCode:400, error: {}});
+                stubOperation('get', {statusCode:400, error: {}});
                 var promise = WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
                 return expect(promise).to.be.rejectedWith('Unexpected response from server');
             });
 
             it('should fail to check when given an unknown instance', function () {
-                stubOperation('head', {statusCode:200});
+                stubOperation('get', {statusCode:200});
                 sinon.stub(inquirer, 'prompt', function () {});
                 WirecloudTask.mac_exists(grunt, 'unknown_instance', 'name', 'vendor', 'version');
                 expect(inquirer.prompt.called).to.equal(true);

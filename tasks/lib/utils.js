@@ -376,7 +376,7 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
                         '/' + mac_vendor +
                         '/' + mac_name +
                         '/' + mac_version;
-            request.head({"url": url, "headers": headers}, function (error, response) {
+            request.get({"url": url, "headers": headers}, function (error, response) {
                 if ([200].indexOf(response.statusCode) !== -1) {
                     resolve(true);
                 }
