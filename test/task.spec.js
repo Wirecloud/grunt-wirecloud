@@ -155,15 +155,13 @@ describe('Wirecloud Task', function () {
                 beforeEach(function () {
                     stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
                     sinon.stub(jf, 'writeFileSync', function () {});
-                    sinon.stub(webdriver, 'Builder', function () {
-                        return {
-                            forBrowser: function () {},
-                            build: function () {},
-                            get: function () {},
-                            wait: function () {},
-                            quit: function () {},
-                            getCurrentUrl: function () {return new Promise(function (resolve, reject) {resolve();});}
-                        };
+                    sinon.stub(webdriver.Builder.prototype, "build", function () {return new webdriver.WebDriver();});
+                    sinon.stub(webdriver.WebDriver.prototype, "get", function() {});
+                    sinon.stub(webdriver.WebDriver.prototype, "wait", function() {});
+                    sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl", function() {
+                        return new Promise(function (resolve, reject) {
+                            resolve();
+                        });
                     });
                     sinon.stub(until, 'urlStartsWith', function () {});
                     sinon.stub(URL, 'parse').returns({query: {code: ''}});
@@ -174,7 +172,10 @@ describe('Wirecloud Task', function () {
                     request.post.restore();
                     until.urlStartsWith.restore();
                     URL.parse.restore();
-                    webdriver.Builder.restore();
+                    webdriver.Builder.prototype.build.restore();
+                    webdriver.WebDriver.prototype.get.restore();
+                    webdriver.WebDriver.prototype.wait.restore();
+                    webdriver.WebDriver.prototype.getCurrentUrl.restore();
                 });
 
                 it('should reject if token authentication responds with an error', function () {
