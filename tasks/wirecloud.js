@@ -92,7 +92,7 @@ module.exports = function (grunt) {
 
         // overwrite: false
         else {
-            utils.upload_mac(grunt, options.instance, this.data.file).then(function () {
+            utils.upload_mac(grunt, instance, this.data.file).then(function () {
                 grunt.log.ok();
                 done();
             }, error.bind(null, done));
