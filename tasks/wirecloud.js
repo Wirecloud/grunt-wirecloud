@@ -23,11 +23,10 @@ module.exports = function (grunt) {
 
     function error (done, e) {
         if (typeof e === 'string') {
-            grunt.verbose.error().error(e);
+            grunt.log.error().error(e);
         } else {
-            grunt.verbose.error().error(e.message);
+            grunt.log.error().error(e.message);
         }
-        grunt.log.error('Error overwriting mashable application component.');
         done(false);
     }
 
