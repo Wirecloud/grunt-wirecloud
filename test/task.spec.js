@@ -152,12 +152,13 @@ describe('Wirecloud Task', function () {
 
             describe('Using Token', function () {
 
-                beforeEach(function () {
-                    stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
+                before(function () {
                     sinon.stub(jf, 'writeFileSync', function () {});
+                    sinon.stub(webdriver.Builder.prototype, "forBrowser", function() {return new webdriver.Builder();});
                     sinon.stub(webdriver.Builder.prototype, "build", function () {return new webdriver.WebDriver();});
                     sinon.stub(webdriver.WebDriver.prototype, "get", function() {});
                     sinon.stub(webdriver.WebDriver.prototype, "wait", function() {});
+                    sinon.stub(webdriver.WebDriver.prototype, "quit", function() {});
                     sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl", function() {
                         return new Promise(function (resolve, reject) {
                             resolve();
@@ -167,15 +168,24 @@ describe('Wirecloud Task', function () {
                     sinon.stub(URL, 'parse').returns({query: {code: ''}});
                 });
 
-                afterEach(function () {
+                after(function () {
                     jf.writeFileSync.restore();
-                    request.post.restore();
                     until.urlStartsWith.restore();
                     URL.parse.restore();
+                    webdriver.Builder.prototype.forBrowser.restore();
                     webdriver.Builder.prototype.build.restore();
                     webdriver.WebDriver.prototype.get.restore();
                     webdriver.WebDriver.prototype.wait.restore();
+                    webdriver.WebDriver.prototype.quit.restore();
                     webdriver.WebDriver.prototype.getCurrentUrl.restore();
+                });
+
+                beforeEach(function () {
+                    stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
+                });
+
+                afterEach(function () {
+                    request.post.restore();
                 });
 
                 it('should reject if token authentication responds with an error', function () {
