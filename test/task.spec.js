@@ -204,7 +204,7 @@ describe('Wirecloud Task', function () {
                     expect(promise).to.be.rejectedWith(error);
                 });
 
-                it('should reject if token authentication responds with an unexpected staqtus code', function () {
+                it('should reject if token authentication responds with an unexpected status code', function () {
                     var error = 'Unexpected response from server';
                     stubOperation('post', {statusCode: 400}, '');
                     stubReadFileSync({
@@ -322,10 +322,11 @@ describe('Wirecloud Task', function () {
                 });
             });
 
-            it('should fail to delete when server responds with error', function () {
-                stubOperation('del', {statusCode:404, error: {}});
+            it('should fail to delete when there is an unexpected response', function () {
+                var response = {statusCode:404};
+                stubOperation('del', response);
                 var promise = WirecloudTask.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
-                return expect(promise).to.be.rejectedWith('Unexpected response from server');
+                return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
             });
 
             it('should fail to delete when given an unknown instance name', function () {
@@ -334,6 +335,13 @@ describe('Wirecloud Task', function () {
                 WirecloudTask.uninstall_mac(grunt, 'unknown_instance', 'name', 'vendor', 'version');
                 expect(inquirer.prompt.called).to.equal(true);
                 inquirer.prompt.restore();
+            });
+
+            it('should fail to delete when an error occurs in the request', function () {
+                var error = {message: "error message"};
+                stubOperation('del', undefined, undefined, error);
+                var promise = WirecloudTask.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
+                return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
             });
         });
 
@@ -365,9 +373,10 @@ describe('Wirecloud Task', function () {
             });
 
             it('should fail to check a MAC when server responds with error other than 404', function () {
-                stubOperation('get', {statusCode:400, error: {}});
+                var response = {statusCode:400, error: {}};
+                stubOperation('get', response);
                 var promise = WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
-                return expect(promise).to.be.rejectedWith('Unexpected response from server');
+                return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
             });
 
             it('should fail to check when given an unknown instance', function () {
@@ -376,6 +385,13 @@ describe('Wirecloud Task', function () {
                 WirecloudTask.mac_exists(grunt, 'unknown_instance', 'name', 'vendor', 'version');
                 expect(inquirer.prompt.called).to.equal(true);
                 inquirer.prompt.restore();
+            });
+
+            it('should fail to check when an error occurs in the request', function () {
+                var error = {message: "error message"};
+                stubOperation('get', undefined, undefined, error);
+                var promise = WirecloudTask.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
+                return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
             });
         });
 
@@ -455,6 +471,13 @@ describe('Wirecloud Task', function () {
                 restoreStream(); // Restore stream so it executes the real method fs.statSync
                 var promise = WirecloudTask.upload_mac(grunt, "some_instance", "File").then(function () {});
                 expect(promise).to.be.rejected;
+            });
+
+            it('should fail to upload when an error occurs in the request', function () {
+                var error = {message: "error message"};
+                stubOperation('post', undefined, undefined, error);
+                var promise = WirecloudTask.upload_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
+                return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
             });
         });
     });
