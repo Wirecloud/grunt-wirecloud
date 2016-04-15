@@ -208,7 +208,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
                 grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
                 grunt.log.verbose.writeln("Redirecting to: " + auth_url);
                 var driver = new webdriver.Builder()
-                    .forBrowser('chrome')
+                    .forBrowser('firefox')
                     .build();
 
                 driver.get(auth_url);
