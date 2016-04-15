@@ -268,7 +268,7 @@ describe('Wirecloud Task', function () {
 
             it('should create a new instance if the one specified does not exist', function () {
                 sinon.stub(inquirer, 'prompt', function (questions, cb) {
-                    cb({continue: true, url: '', client_id: '', client_secret: ''});
+                    cb({url: '', client_id: '', client_secret: ''});
                 });
                 stubReadFileSync({'hosts': {}});
                 var promise = WirecloudTask.get_token(grunt, 'some_instance');
@@ -277,20 +277,11 @@ describe('Wirecloud Task', function () {
 
             it('should create a new instance if no instance had been created before', function () {
                 sinon.stub(inquirer, 'prompt', function (questions, cb) {
-                    cb({continue: true, url: '', client_id: '', client_secret: ''});
+                    cb({url: '', client_id: '', client_secret: ''});
                 });
                 stubReadFileSync({});
                 var promise = WirecloudTask.get_token(grunt, 'some_instance');
                 expect(promise).to.eventually.equal({url: '', client_id: '', client_secret : ''});
-            });
-
-            it('should reject if the user does not want to create the specified instance', function () {
-                sinon.stub(inquirer, 'prompt', function (questions, cb) {
-                    cb({continue: false});
-                });
-                stubReadFileSync({'hosts': {}});
-                var promise = WirecloudTask.get_token(grunt, 'some_instance');
-                expect(promise).to.be.rejectedWith('Invalid instance: some_instance');
             });
         });
     });

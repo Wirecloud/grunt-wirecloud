@@ -283,25 +283,11 @@ var get_token = function get_token(grunt, instance_name) {
                 auth(grunt, instance_name, instance_info).then(resolve, reject);
             }
         } else {
-            var questions = [
-                {
-                    type: "confirm",
-                    name: "continue",
-                    message: "WireCloud instance " + instance_name + " does not exist, do you want to create it?",
-                    default: false
-                }
-            ];
-
-            grunt.log.writeln();
-            inquirer.prompt(questions, function (answers) {
-                if (answers.continue) {
-                    create_instance_interactive(grunt, instance_name).then(function (instance_info) {
-                        auth(grunt, instance_name, instance_info).then(resolve, reject);
-                    }, reject);
-                } else {
-                    reject('Invalid instance: ' + instance_name);
-                }
-            });
+            grunt.log.writeln("\n");
+            grunt.log.writeln(instance_name + " instance is not configured. Creating the new instance:");
+            create_instance_interactive(grunt, instance_name).then(function (instance_info) {
+                auth(grunt, instance_name, instance_info).then(resolve, reject);
+            }, reject);
         }
     });
 };
