@@ -37,7 +37,8 @@ module.exports = function (grunt) {
         var options = this.options({
             reporterOutput: null,
             instance: 'fiwarelab',
-            overwrite: false
+            overwrite: false,
+            public: false
         });
 
         if (typeof this.data.file !== 'string') {
@@ -77,7 +78,7 @@ module.exports = function (grunt) {
             })
 
             // Upload new MAC
-            .then(utils.upload_mac.bind(this, grunt, instance, this.data.file))
+            .then(utils.upload_mac.bind(this, grunt, instance, this.data.file, options.public))
 
             // OK message and finish
             .then(function () {
@@ -91,7 +92,7 @@ module.exports = function (grunt) {
 
         // overwrite: false
         else {
-            utils.upload_mac(grunt, instance, this.data.file).then(function () {
+            utils.upload_mac(grunt, instance, this.data.file, options.public).then(function () {
                 grunt.log.ok();
                 done();
             }, error.bind(null, done));

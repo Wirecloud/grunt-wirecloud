@@ -293,7 +293,7 @@ var get_token = function get_token(grunt, instance_name) {
 };
 module.exports.get_token = get_token;
 
-module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
+module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPublic) {
 
     return new Promise(function (resolve, reject) {
         get_token(grunt, instance_name).then(function (instance_info) {
@@ -308,7 +308,7 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file) {
                 reject(e);
             }
 
-            var url = instance_info.url + '/api/resources';
+            var url = instance_info.url + '/api/resources?public=' + isPublic;
             var stream = fs.createReadStream(file);
             stream.on('open', function () {
                 stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
