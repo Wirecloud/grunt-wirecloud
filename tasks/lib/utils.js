@@ -30,7 +30,7 @@ var error = function error(done, grunt, e) {
     done(false);
 };
 
-var validate_no_empty = function validate_no_empty(value) {
+module.exports.validate_no_empty = function validate_no_empty(value) {
     if (value === '') {
         return 'A value is required.';
     }
