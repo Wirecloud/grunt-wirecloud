@@ -16,35 +16,19 @@
 
 "use strict";
 
-var Promise = require('es6-promise').Promise;
-
-var webdriver = require('selenium-webdriver'),
-    AdmZip = require('adm-zip'),
-    By = require('selenium-webdriver').By,
-    until = require('selenium-webdriver').until,
-    URL = require('url'),
-    request = require('request'),
+var AdmZip = require('adm-zip'),
     path = require('path'),
     jf = require('jsonfile'),
-    fs = require('fs'),
-    inquirer = require('inquirer');
+    ConfigParser = require('wirecloud-config-parser');
 
-
-until.urlStartsWith = function urlStartsWith(base_url) {
-    base_url = URL.parse(base_url);
-    return new until.Condition(
-        '',
-        function (driver) {
-            return driver.getCurrentUrl().then(function (current_url) {
-                current_url = URL.parse(current_url);
-                return current_url.protocol === base_url.protocol &&
-                    current_url.host === base_url.host &&
-                    current_url.pathname === base_url.pathname;
-            });
-        }
-    );
+var error = function error(done, grunt, e) {
+    if (typeof e === 'string') {
+        grunt.log.error().error(e);
+    } else {
+        grunt.log.error().error(e.message);
+    }
+    done(false);
 };
-
 
 var validate_no_empty = function validate_no_empty(value) {
     if (value === '') {
@@ -58,12 +42,12 @@ var get_user_home = function get_user_home() {
     return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
-var get_config_file_name = function get_config_file_name() {
+module.exports.get_config_file_name = function get_config_file_name() {
     return path.join(get_user_home(), '.wirecloudrc');
 };
 
-var read_config = function read_config() {
-    var config_file = get_config_file_name();
+module.exports.read_config = function read_config() {
+    var config_file = exports.get_config_file_name();
 
     try {
         return jf.readFileSync(config_file);
@@ -76,317 +60,10 @@ var read_config = function read_config() {
     }
 };
 
-var get_final_token_using_password_credentials = function get_final_token_using_password_credentials(grunt, instance_name, instance_info, url, username, password, redirect_uri) {
-    return new Promise(function (resolve, reject) {
-        var body = {
-            'grant_type': 'password',
-            'redirect_uri': redirect_uri,
-            'username': username,
-            'password': password
-        };
-
-        // Required for KeyRock 2.0
-        var headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
-        };
-
-        grunt.log.debug('Basic auth: ' + headers.Authorization);
-        grunt.log.verbose.writeln('Requesting final token to ' + url + ' ...');
-        request.post({url: url, headers: headers, form: body}, function (error, response, body) {
-            if (error) {
-                reject(error);
-                return;
-            }
-
-            if (response.statusCode === 401) {
-                reject('Invalid username or password');
-                return;
-            } else if (response.statusCode !== 200) {
-                reject('Unexpected response from server');
-                return;
-            }
-
-            var config = read_config();
-            var token_info = JSON.parse(body);
-            instance_info.token_info = token_info;
-            grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
-
-            config.hosts[instance_name].token_info = token_info;
-            //
-
-            jf.writeFileSync(get_config_file_name(), config);
-
-            resolve(instance_info);
-        });
-    });
-};
-
-var get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
-    var body = {
-        'code': code,
-        'grant_type': 'authorization_code',
-        'client_id': instance_info.client_id,
-        'client_secret': instance_info.client_secret,
-        'redirect_uri': redirect_uri
-    };
-
-    // Required for KeyRock 2.0
-    var headers = {
-        'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
-    };
-
-    grunt.log.verbose.writeln('Requesting final token...');
-    request.post({url: url, headers: headers, form: body}, function (error, response, body) {
-        if (error) {
-            reject(error);
-            return;
-        }
-
-        if (response.statusCode !== 200) {
-            reject('Unexpected response from server');
-            return;
-        }
-
-        var token_info = JSON.parse(body);
-        instance_info.token_info = token_info;
-        grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
-
-        // Store auth info
-        var config = read_config();
-
-        config.hosts[instance_name].token_info = token_info;
-        jf.writeFileSync(get_config_file_name(), config);
-        //
-
-        resolve(instance_info);
-    });
-};
-
-
-var auth = function auth(grunt, instance_name, instance_info) {
-
-    return new Promise(function (resolve, reject) {
-        request.get(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
-            if (error || response.statusCode !== 200) {
-                reject();
-                return;
-            }
-
-            var info = JSON.parse(body);
-            var redirect_uri;
-
-            if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") !== -1) {
-                var questions = [
-                    {
-                        type: "input",
-                        name: "username",
-                        message: "Username:",
-                        validate: validate_no_empty
-                    },
-                    {
-                        type: "password",
-                        name: "password",
-                        message: "Password:"
-                    }
-                ];
-
-                grunt.log.writeln();
-                inquirer.prompt(questions, function (answers) {
-                    get_final_token_using_password_credentials(grunt, instance_name, instance_info, info.token_endpoint, answers.username, answers.password, redirect_uri).then(resolve, reject);
-                });
-
-            } else {
-                redirect_uri = instance_info.redirect_uri;
-                if (redirect_uri == null) {
-                    redirect_uri = info.default_redirect_uri;
-                }
-
-                var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
-
-                grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
-                grunt.log.verbose.writeln("Redirecting to: " + auth_url);
-                var driver = new webdriver.Builder()
-                    .forBrowser('firefox')
-                    .build();
-
-                driver.get(auth_url);
-                driver.wait(until.urlStartsWith(redirect_uri), 24*60*60*1000);
-                driver.getCurrentUrl().then(function (current_url) {
-                    driver.quit();
-                    current_url = URL.parse(current_url, true);
-                    var code = current_url.query.code;
-                    grunt.log.debug('Code: ' + code);
-                    get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
-                }, reject);
-            }
-        });
-    });
-
-};
-
-var create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
-    return new Promise(function (resolve, reject) {
-        var questions = [
-            {
-                type: "input",
-                name: "url",
-                message: "WireCloud instance url:",
-                default: "https://mashup.lab.fiware.org"
-            },
-            {
-                type: "input",
-                name: "client_id",
-                message: "OAuth2 Client Id:",
-                validate: validate_no_empty
-            },
-            {
-                type: "input",
-                name: "client_secret",
-                message: "OAuth2 Client Secret:",
-                validate: validate_no_empty
-            }
-        ];
-
-        inquirer.prompt(questions, function (answers) {
-            var instance_info = {
-                url: answers.url,
-                client_id: answers.client_id,
-                client_secret: answers.client_secret
-            };
-
-            // Store auth info
-            var config = read_config();
-            if (typeof config.hosts !== 'object') {
-                config.hosts = {};
-            }
-
-            config.hosts[instance_name] = instance_info;
-            jf.writeFileSync(get_config_file_name(), config);
-            //
-
-            resolve(instance_info);
-        });
-    });
-};
-
-var get_token = function get_token(grunt, instance_name) {
-
-    return new Promise(function (resolve, reject) {
-        var config = read_config();
-        if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
-            var instance_info = config.hosts[instance_name];
-            if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
-                resolve(instance_info);
-            } else {
-                auth(grunt, instance_name, instance_info).then(resolve, reject);
-            }
-        } else {
-            grunt.log.writeln("\n");
-            grunt.log.writeln(instance_name + " instance is not configured. Creating the new instance:");
-            create_instance_interactive(grunt, instance_name).then(function (instance_info) {
-                auth(grunt, instance_name, instance_info).then(resolve, reject);
-            }, reject);
-        }
-    });
-};
-module.exports.get_token = get_token;
-
-module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPublic) {
-
-    return new Promise(function (resolve, reject) {
-        get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
-                'Content-Type': 'application/octet-stream',
-                'Authorization': 'Bearer ' + instance_info.token_info.access_token
-            };
-
-            try {
-                headers['Content-Length'] = fs.statSync(file)['size'];
-            } catch (e) {
-                reject(e);
-            }
-
-            var url = instance_info.url + '/api/resources?public=' + isPublic;
-            var stream = fs.createReadStream(file);
-            stream.on('open', function () {
-                stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
-                    if (error) {
-                        reject("An error occurred while processing the post request: " + error.message);
-                    } else if ([200, 201].indexOf(response.statusCode) === -1) {
-                        reject(new Error('Unexpected error code: ' + response.statusCode));
-                    } else {
-                        resolve();
-                    }
-                }));
-            });
-
-            stream.on('error', reject);
-        }, reject);
-    });
-
-};
-
-module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_name, mac_vendor, mac_version) {
-    return new Promise(function (resolve, reject) {
-        get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ' + instance_info.token_info.access_token
-            };
-
-            var url = instance_info.url + '/api/resource' +
-                        '/' + mac_vendor +
-                        '/' + mac_name +
-                        '/' + mac_version +
-                        '?affected=true';
-            request.del({"url": url, "headers": headers}, function (error, response) {
-                if (error) {
-                    reject("An error occurred while processing the post request: " + error.message);
-                } else if ([200, 201].indexOf(response.statusCode) === -1) {
-                    reject(new Error('Unexpected error code: ' + response.statusCode));
-                } else {
-                    resolve();
-                }
-            });
-        }, reject);
-    });
-};
-
-module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, mac_vendor, mac_version) {
-    return new Promise(function (resolve, reject) {
-        get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
-                'Accept': 'application/json',
-                'Authorization': 'Bearer ' + instance_info.token_info.access_token
-            };
-
-            var url = instance_info.url + '/api/resource' +
-                        '/' + mac_vendor +
-                        '/' + mac_name +
-                        '/' + mac_version;
-            request.get({"url": url, "headers": headers}, function (error, response) {
-                if (error) {
-                    reject("An error occurred while processing the post request: " + error.message);
-                } else if ([200].indexOf(response.statusCode) !== -1) {
-                    resolve(true);
-                }
-                else if ([404].indexOf(response.statusCode) !== -1) {
-                    resolve(false);
-                }
-                else {
-                    reject(new Error('Unexpected error code: ' + response.statusCode));
-                }
-            });
-        }, reject);
-    });
-};
-
-module.exports.getConfigData = function (path) {
+module.exports.getConfigData = function getConfigData(configPath) {
     var content, wgtData;
     try {
-        wgtData = new AdmZip(path);
+        wgtData = new AdmZip(configPath);
     } catch (e) {
         throw e;
     }
@@ -399,4 +76,64 @@ module.exports.getConfigData = function (path) {
         throw new Error('Zip file did not contain a config.xml file');
     }
     return content;
+};
+
+module.exports.execute = function execute(data, options, grunt, done) {
+
+    if (typeof data.file !== 'string') {
+        grunt.log.error('Missing info about the file to upload');
+        return done(false);
+    }
+
+    var instance = grunt.option('target') ? grunt.option('target') : options.instance;
+    var msg = 'Uploading ' + data.file + ' to ' + instance + '... ';
+    grunt.log.write(msg);
+    var content = null;
+    try {
+        content = module.getConfigData(data.file);
+    } catch (e) {
+        return error(done, grunt, e);
+    }
+
+    if (options.overwrite) {
+        var configParser;
+        try {
+            configParser = new ConfigParser({content: content, validate: true});
+        } catch (e) {
+            error(done, grunt, e);
+        }
+        var configData = configParser.getData();
+
+        // Check if MAC is already uploaded
+        module.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version).then(function (exists) {
+            return exists;
+        })
+
+        // Delete MAC if already uploaded
+        .then(function (exists) {
+            if (exists) {
+                return module.uninstall_mac(grunt, instance, configData.name, configData.vendor, configData.version);
+            }
+        })
+
+        // Upload new MAC
+        .then(module.upload_mac(grunt, instance, data.file, options.public))
+
+        // OK message and finish
+        .then(function () {
+            grunt.log.ok();
+            done();
+        })
+
+        // Error catcher for all previous promises
+        .catch(error.bind(null, done));
+    }
+
+    // overwrite: false
+    else {
+        module.upload_mac(grunt, instance, data.file, options.public).then(function () {
+            grunt.log.ok();
+            done();
+        }, error.bind(null, done));
+    }
 };

@@ -41,7 +41,7 @@ module.exports = function(grunt) {
             coverage: {
                 src: 'test', // a folder works nicely
                 options: {
-                    mask: '*.spec.js'
+                    mask: 'main.spec.js'
                 }
             }
         },
@@ -51,7 +51,7 @@ module.exports = function(grunt) {
                 options: {
                     reporter: 'spec'
                 },
-                src: ['test/**/*.js']
+                src: ['test/main.spec.js']
             }
         }
 

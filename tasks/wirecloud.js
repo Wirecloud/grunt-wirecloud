@@ -17,18 +17,8 @@
 'use strict';
 
 var utils = require('./lib/utils');
-var ConfigParser = require('wirecloud-config-parser');
 
 module.exports = function (grunt) {
-
-    function error (done, e) {
-        if (typeof e === 'string') {
-            grunt.log.error().error(e);
-        } else {
-            grunt.log.error().error(e.message);
-        }
-        done(false);
-    }
 
     grunt.registerMultiTask('wirecloud', 'Upload Mashable Application Components to a wirecloud instance.', function() {
         var done = this.async();
@@ -41,62 +31,7 @@ module.exports = function (grunt) {
             public: false
         });
 
-        if (typeof this.data.file !== 'string') {
-            grunt.log.error('Missing info about the file to upload');
-            return done(false);
-        }
-
-        var instance = grunt.option('target') ? grunt.option('target') : options.instance;
-        var msg = 'Uploading ' + this.data.file + ' to ' + instance + '... ';
-        grunt.log.write(msg);
-        var content = null;
-        try {
-            content = utils.getConfigData(this.data.file);
-        } catch (e) {
-            return error(done, e);
-        }
-
-        if (options.overwrite) {
-            var configParser;
-            try {
-                configParser = new ConfigParser({content: content, validate: true});
-            } catch (e) {
-                error(done, e);
-            }
-            var configData = configParser.getData();
-
-            // Check if MAC is already uploaded
-            utils.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version).then(function (exists) {
-                return exists;
-            })
-
-            // Delete MAC if already uploaded
-            .then(function (exists) {
-                if (exists) {
-                    return utils.uninstall_mac(grunt, instance, configData.name, configData.vendor, configData.version);
-                }
-            })
-
-            // Upload new MAC
-            .then(utils.upload_mac.bind(this, grunt, instance, this.data.file, options.public))
-
-            // OK message and finish
-            .then(function () {
-                grunt.log.ok();
-                done();
-            })
-
-            // Error catcher for all previous promises
-            .catch(error.bind(null, done));
-        }
-
-        // overwrite: false
-        else {
-            utils.upload_mac(grunt, instance, this.data.file, options.public).then(function () {
-                grunt.log.ok();
-                done();
-            }, error.bind(null, done));
-        }
+        utils.execute(this.data, options, grunt, done);
 
 
     });
