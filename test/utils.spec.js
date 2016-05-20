@@ -19,10 +19,12 @@
 var chai = require('chai');
 var expect = chai.expect;
 var AdmZip = require('adm-zip');
+var sinon = require('sinon');
 
 var Utils = require('../tasks/lib/utils');
+var common = require('./main.spec').common;
 
-describe('Config file', function () {
+describe('config.xml file', function () {
 
     it('should get config data from zip file', function () {
         var zip = new AdmZip('test/fixtures/correct.wgt');
@@ -37,5 +39,52 @@ describe('Config file', function () {
 
     it('should fail if zip file does not contain a config file', function () {
         expect(Utils.getConfigData.bind(null, 'test/fixtures/no_config.wgt')).to.throw(Error, 'Zip file did not contain a config.xml file');
+    });
+});
+
+describe('grunt-wirecloud config file', function () {
+    describe('read_config', function () {
+        before(function () {
+            sinon.stub(Utils, 'get_config_file_name', function () {return '';});
+        });
+
+        after(function () {
+            Utils.get_config_file_name.restore();
+        });
+
+        it('should read the config file',function () {
+            var expectedContent = 'some_content';
+            common.stubReadFileSync(expectedContent);
+            expect(Utils.read_config()).to.equal(expectedContent);
+        });
+
+        it('should fail with ENOENT', function () {
+            var expectedError = {code: 'ENOENT'};
+            common.stubReadFileSync(null, expectedError);
+            expect(Utils.read_config()).to.be.empty;
+        });
+
+        it('should with error other than ENOENT', function () {
+            var expectedError = 'Error';
+            common.stubReadFileSync(null, expectedError);
+            expect(Utils.read_config).to.throw(expectedError);
+        });
+    });
+
+});
+
+describe('Validate no empty', function () {
+    it('should require a value when no value is passed', function () {
+        var errorMessage = 'A value is required.';
+        expect(Utils.validate_no_empty()).to.equal(errorMessage);
+    });
+
+    it('should require a value when an empty string is passed', function () {
+        var errorMessage = 'A value is required.';
+        expect(Utils.validate_no_empty('')).to.equal(errorMessage);
+    });
+
+    it('should return true', function () {
+        expect(Utils.validate_no_empty('something')).to.equal(true);
     });
 });

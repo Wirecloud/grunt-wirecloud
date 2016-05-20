@@ -21,8 +21,11 @@ var jf = require('jsonfile');
 var request = require('request');
 
 // Should stub get_token instead, so it is not coupled with other methods' tests
-module.exports.stubReadFileSync = function stubReadFileSync(response) {
+module.exports.stubReadFileSync = function stubReadFileSync(response, error) {
     sinon.stub(jf, 'readFileSync', function () {
+        if (error) {
+            throw error;
+        }
         return response;
     });
 };

@@ -44,4 +44,5 @@ describe('Wirecloud Task', function () {
     importTest('Token management', './authentication.spec');
     importTest('Mashable Application Component Operations', './operations.spec');
     importTest('Utils', './utils.spec');
+    importTest('Task', './task.spec');
 });
