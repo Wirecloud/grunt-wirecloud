@@ -52,7 +52,7 @@ var overwrite = function overwrite(file, instance, done, grunt, isPublic) {
     })
 
     // Upload new MAC
-    .then(ops.upload_mac(grunt, instance, file, isPublic))
+    .then(ops.upload_mac.bind(null, grunt, instance, file, isPublic))
 
     // OK message and finish
     .then(function () {
