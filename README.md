@@ -38,6 +38,12 @@ Default value: `false`
 If the same version of the Mashable Application Component is currently uploaded to the instance, delete it and upload it again.
 >**NOTE**: If this option is set to false and the component already exists, nothing will be done.
 
+#### options.public
+Type: `Boolean`
+Default value: `false`
+
+Uploads the Mashable Application Component and makes it available to all users.
+
 ### Usage Examples
 
 #### Default Options
