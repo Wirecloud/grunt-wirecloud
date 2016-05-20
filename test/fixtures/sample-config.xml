@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<widget xmlns="http://wirecloud.conwet.fi.upm.es/ns/macdescription/1" vendor="UPM-ETSIINF" name="listimages-widget" version="0.1.10">
+  <details>
+    <title>List Images</title>
+    <email>bgrana@conwet.com</email>
+    <image>images/catalogue.png</image>
+    <smartphoneimage>images/catalogueSmartphone.png</smartphoneimage>
+    <description>FIDASH widget that shows a table with openStack images data</description>
+    <authors>bgrana</authors>
+  </details>
+  <requirements>
+    <feature name="StyledElements" />
+  </requirements>
+  <preferences>
+    <preference name="id" type="boolean" description="Activate to display the id column" label="ID" default="false" />
+    <preference name="name" type="boolean" description="Activate to display the name column" label="Name" default="true" />
+    <preference name="status" type="boolean" description="Activate to display the status column" label="Status" default="true" />
+    <preference name="visibility" type="boolean" description="Activate to display the visibility column" label="Visibility" default="true" />
+    <preference name="checksum" type="boolean" description="Activate to display the checksum column" label="Checksum" default="false" />
+    <preference name="created" type="boolean" description="Activate to display the created column" label="Created" default="true" />
+    <preference name="updated" type="boolean" description="Activate to display the updated column" label="Updated" default="false" />
+    <preference name="size" type="boolean" description="Activate to display the size column" label="Size" default="false" />
+    <preference name="container_format" type="boolean" description="Activate to display the container format column" label="Container format" default="false" />
+    <preference name="disk_format" type="boolean" description="Activate to display the disk format column" label="Disk format" default="false" />
+  </preferences>
+  <wiring>
+    <outputendpoint name="image_id" type="text" label="Image ID" description="Sends the image ID and OpenStack access." friendcode="image_id"/>
+  </wiring>
+  <contents src="index.html" useplatformstyle="true"/>
+  <rendering height="25" width="9"/>
+</widget>

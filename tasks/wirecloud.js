@@ -16,7 +16,7 @@
 
 'use strict';
 
-var utils = require('./lib/utils');
+var task = require('./lib/task');
 
 module.exports = function (grunt) {
 
@@ -31,8 +31,7 @@ module.exports = function (grunt) {
             public: false
         });
 
-        utils.execute(this.data, options, grunt, done);
-
+        task.execute(this.data, options, grunt, done);
 
     });
 
