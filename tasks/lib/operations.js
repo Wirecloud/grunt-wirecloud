@@ -37,7 +37,8 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
                 reject(e);
             }
 
-            var url = instance_info.url + '/api/resources?public=' + isPublic;
+            var users = isPublic ? '*' : '';
+            var url = instance_info.url + '/api/resources?user_list=' + users;
             var stream = fs.createReadStream(file);
             stream.on('open', function () {
                 stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
