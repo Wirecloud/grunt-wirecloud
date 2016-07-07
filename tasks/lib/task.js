@@ -72,14 +72,15 @@ module.exports.execute = function execute(data, options, grunt, done) {
     }
 
     var instance = grunt.option('target') ? grunt.option('target') : options.instance;
+    var isPublic = grunt.option('public') ? grunt.option('public') : options.public;
     var msg = 'Uploading ' + data.file + ' to ' + instance + '... ';
     grunt.log.write(msg);
 
 
     if (options.overwrite) {
-        return overwrite(data.file, instance, done, grunt, options.public);
+        return overwrite(data.file, instance, done, grunt, isPublic);
     } else {
-        return ops.upload_mac(grunt, instance, data.file, options.public).then(function () {
+        return ops.upload_mac(grunt, instance, data.file, isPublic).then(function () {
             grunt.log.ok();
             done();
         }, error.bind(null, done, grunt));
