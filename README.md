@@ -44,6 +44,31 @@ Default value: `false`
 
 Uploads the Mashable Application Component and makes it available to all users.
 
+### Flags
+
+Some options are also available as flags in case you want to change them when executing the grunt command. There are two flags available:
+* **target**: used to choose the instance to which the component will be uploaded.
+* **public**: used to make the component available to all users.
+
+#### Example
+
+To upload a widget available to all users to localhost instance using flags you can use the this Gruntfile.js configuration:
+
+```js
+grunt.initConfig({
+    wirecloud: {
+        default: {
+            file: 'build/component.wgt'
+        }
+    },
+});
+```
+And the following command:
+
+```shell
+grunt wirecloud --target localhost --public
+```
+
 ### Usage Examples
 
 #### Default Options
@@ -69,10 +94,25 @@ grunt.initConfig({
     wirecloud: {
         options: {
             instance: 'some_instance',
-            mac_name: 'my_component',
-            mac_vendor: 'my_vendor',
-            mac_version: '0.1.0',
             overwrite: true
+        },
+        publish: {
+            file: 'path/to/component/file'
+        }
+    }
+});
+```
+
+#### Upload a public component
+
+This configuration uploads a component avilable to all users.
+
+```js
+grunt.initConfig({
+    wirecloud: {
+        options: {
+            instance: 'some_instance',
+            public: true
         },
         publish: {
             file: 'path/to/component/file'
