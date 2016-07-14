@@ -31,6 +31,10 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
+            if (typeof isPublic !== 'boolean') {
+                reject('Error: isPublic parameter must be a boolean.');
+            }
+
             try {
                 headers['Content-Length'] = fs.statSync(file)['size'];
             } catch (e) {

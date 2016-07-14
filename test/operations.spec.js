@@ -220,4 +220,11 @@ describe('Upload', function () {
             expect(url).to.include('public=true');
         });
     });
+
+    it('should fail to upload a MAC if the isPublic parameter is not a boolean', function () {
+        var publicErrorMsg = 'Error: isPublic parameter must be a boolean.';
+        common.stubOperation('post', {statusCode: 200});
+        var promise = ops.upload_mac(grunt, "some_instance", "File", "Not a boolean");
+        expect(promise).to.be.rejectedWith(publicErrorMsg);
+    });
 });
