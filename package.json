@@ -1,7 +1,7 @@
 {
   "name": "grunt-wirecloud",
   "description": "WireCloud utilities for grunt.",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "homepage": "https://github.com/Wirecloud/grunt-wirecloud",
   "author": {
     "name": "WireCloud Team",
