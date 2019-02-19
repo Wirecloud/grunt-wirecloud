@@ -16,7 +16,6 @@
 
 "use strict";
 
-var Promise = require('es6-promise').Promise;
 var inquirer = require('inquirer');
 var request = require('request');
 var jf = require('jsonfile');
