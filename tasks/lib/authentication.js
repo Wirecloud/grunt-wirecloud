@@ -80,7 +80,7 @@ var get_final_token_using_password_credentials = function get_final_token_using_
             config.hosts[instance_name].token_info = token_info;
             //
 
-            jf.writeFileSync(utils.get_config_file_name(), config);
+            jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
 
             resolve(instance_info);
         });
@@ -121,7 +121,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
         var config = utils.read_config();
 
         config.hosts[instance_name].token_info = token_info;
-        jf.writeFileSync(utils.get_config_file_name(), config);
+        jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
         //
 
         resolve(instance_info);
@@ -227,7 +227,7 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
             }
 
             config.hosts[instance_name] = instance_info;
-            jf.writeFileSync(utils.get_config_file_name(), config);
+            jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
             //
 
             resolve(instance_info);
