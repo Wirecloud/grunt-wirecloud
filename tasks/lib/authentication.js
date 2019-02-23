@@ -21,13 +21,13 @@ var request = require('request');
 var jf = require('jsonfile');
 var URL = require('url');
 var webdriver = require('selenium-webdriver');
-var until = require('selenium-webdriver').until;
+const {until, Condition} = require('selenium-webdriver');
 
 var utils = require('./utils');
 
 until.urlStartsWith = function urlStartsWith(base_url) {
     base_url = URL.parse(base_url);
-    return new until.Condition(
+    return new Condition(
         '',
         function (driver) {
             return driver.getCurrentUrl().then(function (current_url) {
@@ -96,13 +96,8 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
         'redirect_uri': redirect_uri
     };
 
-    // Required for KeyRock 2.0
-    var headers = {
-        'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
-    };
-
     grunt.log.verbose.writeln('Requesting final token...');
-    request.post({url: url, headers: headers, form: body}, function (error, response, body) {
+    request.post({url: url, form: body}, function (error, response, body) {
         if (error) {
             reject(error);
             return;
@@ -191,47 +186,45 @@ var auth = function auth(grunt, instance_name, instance_info) {
 };
 
 var create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
-    return new Promise(function (resolve, reject) {
-        var questions = [
-            {
-                type: "input",
-                name: "url",
-                message: "WireCloud instance url:",
-                default: "https://mashup.lab.fiware.org"
-            },
-            {
-                type: "input",
-                name: "client_id",
-                message: "OAuth2 Client Id:",
-                validate: utils.validate_no_empty
-            },
-            {
-                type: "input",
-                name: "client_secret",
-                message: "OAuth2 Client Secret:",
-                validate: utils.validate_no_empty
-            }
-        ];
+    var questions = [
+        {
+            type: "input",
+            name: "url",
+            message: "WireCloud instance url:",
+            default: "https://mashup.lab.fiware.org"
+        },
+        {
+            type: "input",
+            name: "client_id",
+            message: "OAuth2 Client Id:",
+            validate: utils.validate_no_empty
+        },
+        {
+            type: "input",
+            name: "client_secret",
+            message: "OAuth2 Client Secret:",
+            validate: utils.validate_no_empty
+        }
+    ];
 
-        inquirer.prompt(questions, function (answers) {
-            var instance_info = {
-                url: answers.url,
-                client_id: answers.client_id,
-                client_secret: answers.client_secret
-            };
+    return inquirer.prompt(questions).then(function (answers) {
+        var instance_info = {
+            url: answers.url,
+            client_id: answers.client_id,
+            client_secret: answers.client_secret
+        };
 
-            // Store auth info
-            var config = utils.read_config();
-            if (typeof config.hosts !== 'object') {
-                config.hosts = {};
-            }
+        // Store auth info
+        var config = utils.read_config();
+        if (typeof config.hosts !== 'object') {
+            config.hosts = {};
+        }
 
-            config.hosts[instance_name] = instance_info;
-            jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
-            //
+        config.hosts[instance_name] = instance_info;
+        jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
+        //
 
-            resolve(instance_info);
-        });
+        return Promise.resolve(instance_info);
     });
 };
 
