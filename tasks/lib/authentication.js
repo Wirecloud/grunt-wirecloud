@@ -109,6 +109,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
         }
 
         var token_info = JSON.parse(body);
+        token_info.expires_on = Date.now() + token_info.expires_in - 20;
         instance_info.token_info = token_info;
         grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
@@ -152,7 +153,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
                 ];
 
                 grunt.log.writeln();
-                inquirer.prompt(questions, function (answers) {
+                inquirer.prompt(questions).then(function (answers) {
                     get_final_token_using_password_credentials(grunt, instance_name, instance_info, info.token_endpoint, answers.username, answers.password, redirect_uri).then(resolve, reject);
                 });
 
@@ -180,6 +181,61 @@ var auth = function auth(grunt, instance_name, instance_info) {
                     get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
                 }, reject);
             }
+        });
+    });
+
+};
+
+const refresh_token = function refresh_token(grunt, instance_name, instance_info) {
+
+    return new Promise(function (resolve, reject) {
+        request.get(URL.resolve(instance_info.url, '.well-known/oauth'), (error, response, info_body) => {
+            if (error || response.statusCode !== 200) {
+                reject(new Error("OAuth 2 configuration couldn't be retrieved from WireCloud server"));
+                return;
+            }
+
+            var info = JSON.parse(info_body);
+            var body = {
+                'refresh_token': instance_info.token_info.refresh_token,
+                'grant_type': 'refresh_token',
+                'client_id': instance_info.client_id,
+                'client_secret': instance_info.client_secret
+            };
+
+            var headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            };
+
+            grunt.log.debug('Refreshing auth token');
+            request.post({url: info.token_endpoint, headers: headers, form: body}, (error, response, body) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                if (response.statusCode === 401) {
+                    reject('expired refresh token');
+                    return;
+                } else if (response.statusCode !== 200) {
+                    reject('Unexpected response from server');
+                    return;
+                }
+
+                var config = utils.read_config();
+                var token_info = JSON.parse(body);
+                token_info.expires_on = Date.now() + token_info.expires_in - 20;
+                instance_info.token_info = token_info;
+                grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
+
+                config.hosts[instance_name].token_info = token_info;
+                //
+
+                jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
+
+                resolve(instance_info);
+            });
         });
     });
 
@@ -230,22 +286,24 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
 
 var get_token = function get_token(grunt, instance_name) {
 
-    return new Promise(function (resolve, reject) {
-        var config = utils.read_config();
-        if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
-            var instance_info = config.hosts[instance_name];
-            if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
-                resolve(instance_info);
+    var config = utils.read_config();
+    if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
+        var instance_info = config.hosts[instance_name];
+        if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
+            if (instance_info.token_info.expires_on == null || instance_info.token_info.expires_on <= Date.now()) {
+                return refresh_token(grunt, instance_name, instance_info);
             } else {
-                auth(grunt, instance_name, instance_info).then(resolve, reject);
+                return Promise.resolve(instance_info);
             }
         } else {
-            grunt.log.writeln("\n");
-            grunt.log.writeln(instance_name + " instance is not configured. Creating the new instance:");
-            create_instance_interactive(grunt, instance_name).then(function (instance_info) {
-                auth(grunt, instance_name, instance_info).then(resolve, reject);
-            }, reject);
+            return auth(grunt, instance_name, instance_info);
         }
-    });
+    } else {
+        grunt.log.writeln("\n");
+        grunt.log.writeln(instance_name + " instance is not configured. Creating it:");
+        return create_instance_interactive(grunt, instance_name).then(function (instance_info) {
+            return auth(grunt, instance_name, instance_info);
+        });
+    }
 };
 module.exports.get_token = get_token;

@@ -33,33 +33,37 @@ var Auth = require('../tasks/lib/authentication');
 
 chai.use(chaiAsPromised);
 
-it('should get an existing token', function () {
-    var token_value = 'mytoken';
-    common.stubReadFileSync({
-        'hosts': {
-            'some_instance': {
-                'token_info': {
-                    'access_token': token_value
-                }
-            }
-        }
-    });
-    return Auth.get_token(grunt, 'some_instance').then(function (token) {
-        expect(token.token_info.access_token).to.equal(token_value);
-    });
-});
-
 describe('Authentication', function () {
 
     afterEach(function () {
         common.restoreOperation('get');
     });
 
+    it('should get an existing token', function () {
+        var token_value = 'mytoken';
+        common.stubReadFileSync({
+            'hosts': {
+                'some_instance': {
+                    'url': 'http://example.com',
+                    'token_info': {
+                        'access_token': token_value,
+                        'expires_on': Date.now() + 1000000
+                    }
+                }
+            }
+        });
+        return Auth.get_token(grunt, 'some_instance').then((instance) => {
+            expect(instance.token_info.access_token).to.equal(token_value);
+        });
+    });
+
     describe('Using password', function () {
 
         beforeEach(function () {
-            sinon.stub(inquirer, 'prompt', function (questions, cb) {
-                cb({username: 'user', password: 'pass'});
+            sinon.stub(inquirer, 'prompt').returns({
+                then: function (cb) {
+                    return cb({username: 'user', password: 'pass'});
+                }
             });
             common.stubOperation('get', {statusCode: 200}, '{"flows": ["Resource Owner Password Credentials Grant"]}');
         });
@@ -82,7 +86,7 @@ describe('Authentication', function () {
                 }
             });
             var promise = Auth.get_token(grunt, 'some_instance');
-            expect(promise).to.eventually.equal({'token_info': token_info});
+            expect(promise).to.eventually.equal({url: '', client_id: '', client_secret: '', token_info: token_info});
         });
 
         it('should reject if authentication responds with an error', function () {
@@ -165,10 +169,12 @@ describe('Authentication', function () {
         });
 
         beforeEach(function () {
+            sinon.stub(Date, 'now').returns(1000);
             common.stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
         });
 
         afterEach(function () {
+            Date.now.restore();
             common.restoreOperation('post');
         });
 
@@ -205,7 +211,7 @@ describe('Authentication', function () {
         });
 
         it('should authenticate using an oauth token', function () {
-            var token_info = {};
+            var token_info = {expires_in: 10};
             common.stubOperation('post', {statusCode: 200}, JSON.stringify(token_info));
             common.stubReadFileSync({
                 'hosts': {
@@ -217,7 +223,10 @@ describe('Authentication', function () {
                 }
             });
             var promise = Auth.get_token(grunt, 'some_instance');
-            expect(promise).to.eventually.equal({'token_info': token_info});
+            return promise.then((instance_info) => {
+                expect(instance_info.token_info.expires_in).to.equal(10);
+                expect(instance_info.token_info.expires_on).to.equal(990);
+            });
         });
     });
 
@@ -241,7 +250,7 @@ describe('Interactive instance creation', function () {
 
     beforeEach(function() {
         sinon.stub(jf, 'writeFileSync', function () {});
-        sinon.stub(request, 'get', function () {});
+        common.stubOperation('get', {statusCode: 404}, '{}');
     });
 
     afterEach(function () {
@@ -251,20 +260,25 @@ describe('Interactive instance creation', function () {
     });
 
     it('should create a new instance if the one specified does not exist', function () {
-        sinon.stub(inquirer, 'prompt', function (questions, cb) {
-            cb({url: '', client_id: '', client_secret: ''});
+        sinon.stub(inquirer, 'prompt').returns({
+            then: function (cb) {
+                return cb({url: '', client_id: '', client_secret: ''});
+            }
         });
         common.stubReadFileSync({'hosts': {}});
         var promise = Auth.get_token(grunt, 'some_instance');
-        expect(promise).to.eventually.equal({url: '', client_id: '', client_secret : ''});
+        return promise.catch(() => {});
     });
 
     it('should create a new instance if no instance had been created before', function () {
-        sinon.stub(inquirer, 'prompt', function (questions, cb) {
-            cb({url: '', client_id: '', client_secret: ''});
+        sinon.stub(inquirer, 'prompt').returns({
+            then: function (cb) {
+                return cb({url: '', client_id: '', client_secret: ''});
+            }
         });
         common.stubReadFileSync({});
         var promise = Auth.get_token(grunt, 'some_instance');
-        expect(promise).to.eventually.equal({url: '', client_id: '', client_secret : ''});
+        return promise.catch(() => {});
     });
+
 });
