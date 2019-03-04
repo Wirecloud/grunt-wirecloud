@@ -190,7 +190,7 @@ var auth = function auth(grunt, instance_name, instance_info) {
 const refresh_token = function refresh_token(grunt, instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
-        const url = new URL('.well-known/oauth', instance_info.url);
+        const url = URL.resolve(instance_info.url, '.well-known/oauth');
         grunt.log.verbose.writeln('Requesting OAuth2 details (' + url + ') ...');
         request.get(url.toString(), (error, response, info_body) => {
             if (error || response.statusCode !== 200) {
