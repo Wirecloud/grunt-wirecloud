@@ -45,7 +45,7 @@ describe('config.xml file', function () {
 describe('grunt-wirecloud config file', function () {
     describe('read_config', function () {
         before(function () {
-            sinon.stub(Utils, 'get_config_file_name', function () {return '';});
+            sinon.stub(Utils, 'get_config_file_name').returns('');
         });
 
         after(function () {

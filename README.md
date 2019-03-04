@@ -39,10 +39,21 @@ If the same version of the Mashable Application Component is currently uploaded 
 >**NOTE**: If this option is set to false and the component already exists, nothing will be done.
 
 #### options.public
-Type: `Boolean`
-Default value: `false`
+Type: `Boolean` | `null`
+Default value: `null`
 
-Uploads the Mashable Application Component and makes it available to all users.
+Configure public visibility of the uploaded Mashable Application Component. If
+this value is `true` the uploaded MAC will be configure to be available to all
+the users. If `false` the MAC will be available only to the configured `users`
+and `groups`.
+
+If `null`, the server will chose the default value for this parameter. This
+means that uploaded MACS will be public when uploading it into a wirecloud
+catalogue instance and private when uploading into a WireCloud platform
+instance.
+
+This parameter may require permissions on the target server.
+
 
 ### Flags
 

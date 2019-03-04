@@ -47,13 +47,13 @@ describe('Authentication', function () {
                     'url': 'http://example.com',
                     'token_info': {
                         'access_token': token_value,
-                        'expires_on': Date.now() + 1000000
+                        'expires_on': Infinity
                     }
                 }
             }
         });
         return Auth.get_token(grunt, 'some_instance').then((instance) => {
-            expect(instance.token_info.access_token).to.equal(token_value);
+            expect(instance.token_info.access_token).to.deep.equal(token_value);
         });
     });
 
@@ -85,8 +85,9 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
-            expect(promise).to.eventually.equal({url: '', client_id: '', client_secret: '', token_info: token_info});
+            return Auth.get_token(grunt, 'some_instance').then((instance) => {
+                expect(instance.token_info).to.deep.equal(token_info);
+            });
         });
 
         it('should reject if authentication responds with an error', function () {
@@ -141,18 +142,18 @@ describe('Authentication', function () {
     describe('Using Token', function () {
 
         before(function () {
-            sinon.stub(jf, 'writeFileSync', function () {});
-            sinon.stub(webdriver.Builder.prototype, "forBrowser", function() {return new webdriver.Builder();});
-            sinon.stub(webdriver.Builder.prototype, "build", function () {return new webdriver.WebDriver();});
-            sinon.stub(webdriver.WebDriver.prototype, "get", function() {});
-            sinon.stub(webdriver.WebDriver.prototype, "wait", function() {});
-            sinon.stub(webdriver.WebDriver.prototype, "quit", function() {});
-            sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl", function() {
+            sinon.stub(jf, 'writeFileSync');
+            sinon.stub(webdriver.Builder.prototype, "forBrowser").callsFake(function() {return new webdriver.Builder();});
+            sinon.stub(webdriver.Builder.prototype, "build").callsFake(function () {return new webdriver.WebDriver();});
+            sinon.stub(webdriver.WebDriver.prototype, "get");
+            sinon.stub(webdriver.WebDriver.prototype, "wait");
+            sinon.stub(webdriver.WebDriver.prototype, "quit");
+            sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl").callsFake(function() {
                 return new Promise(function (resolve, reject) {
                     resolve();
                 });
             });
-            sinon.stub(until, 'urlStartsWith', function () {});
+            sinon.stub(until, 'urlStartsWith');
             sinon.stub(URL, 'parse').returns({query: {code: ''}});
         });
 
@@ -249,7 +250,7 @@ describe('Authentication', function () {
 describe('Interactive instance creation', function () {
 
     beforeEach(function() {
-        sinon.stub(jf, 'writeFileSync', function () {});
+        sinon.stub(jf, 'writeFileSync');
         common.stubOperation('get', {statusCode: 404}, '{}');
     });
 

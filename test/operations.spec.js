@@ -31,16 +31,18 @@ var auth = require('../tasks/lib/authentication');
 
 chai.use(chaiAsPromised);
 
+const instance_info = {
+    'url': 'http://example.com',
+    'token_info': {
+        'access_token': 'some_token',
+        'expires_on': Date.now() + 1000000
+    }
+};
+
 beforeEach(function () {
     common.stubReadFileSync({
         'hosts': {
-            'some_instance': {
-                'url': 'http://example.com',
-                'token_info': {
-                    'access_token': 'some_token',
-                    'expires_on': Date.now() + 1000000
-                }
-            }
+            'some_instance': instance_info
         }
     });
 });
@@ -48,7 +50,7 @@ beforeEach(function () {
 describe('Delete', function () {
 
     beforeEach(() => {
-        sinon.stub(auth, 'get_token').returns(Promise.resolve({token_info: {}}));
+        sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
     });
 
     afterEach(function () {
@@ -81,7 +83,7 @@ describe('Delete', function () {
 describe('Check', function () {
 
     beforeEach(() => {
-        sinon.stub(auth, 'get_token').returns(Promise.resolve({token_info: {}}));
+        sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
     });
 
     afterEach(function () {
@@ -137,8 +139,8 @@ describe('Upload', function () {
             },
             pipe: function (cb) {}
         };
-        sinon.stub(fs, 'createReadStream', function () { return Obj;});
-        sinon.stub(fs, 'statSync', function () {return {size: 1};});
+        sinon.stub(fs, 'createReadStream').returns(Obj);
+        sinon.stub(fs, 'statSync').returns({size: 1});
     }
 
     function restoreStream() {
@@ -151,7 +153,7 @@ describe('Upload', function () {
     }
 
     beforeEach(function () {
-        sinon.stub(auth, 'get_token').returns(Promise.resolve({token_info: {}}));
+        sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
         stubStream('open');
     });
 
@@ -174,14 +176,14 @@ describe('Upload', function () {
         // Test status 200
         common.stubOperation('post', {statusCode: 200});
         var resp200 = ops.upload_mac(grunt, "some_instance", "File", false);
-        expect(resp200).to.be.resolved;
+        expect(resp200).to.be.fulfilled;
 
         request.post.restore(); // Restore post method to stub with a new statusCode
 
         // Test status 201
         common.stubOperation('post', {statusCode: 201});
         var resp201 = ops.upload_mac(grunt, "some_instance", "File", false);
-        expect(resp201).to.be.resolved;
+        expect(resp201).to.be.fulfilled;
     });
 
     it('should reject if server responds with an error', function () {
@@ -215,13 +217,13 @@ describe('Upload', function () {
     it('should upload a MAC making it public', function () {
         common.stubOperation('post', {statusCode: 200});
         return ops.upload_mac(grunt, "some_instance", "File", true).then(function () {
-            var url = request.post.args[0][0].url;
-            expect(url).to.include('public=true');
+            var qs = request.post.args[0][0].qs;
+            expect(qs).to.include({public: true});
         });
     });
 
     it('should fail to upload a MAC if the isPublic parameter is not a boolean', function () {
-        var publicErrorMsg = 'Error: isPublic parameter must be a boolean.';
+        var publicErrorMsg = 'Error: isPublic parameter must be a boolean or null.';
         common.stubOperation('post', {statusCode: 200});
         var promise = ops.upload_mac(grunt, "some_instance", "File", "Not a boolean");
         expect(promise).to.be.rejectedWith(publicErrorMsg);

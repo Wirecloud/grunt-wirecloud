@@ -28,7 +28,7 @@ module.exports = function (grunt) {
             reporterOutput: null,
             instance: 'fiwarelab',
             overwrite: false,
-            public: false
+            public: null
         });
 
         task.execute(this.data, options, grunt, done);

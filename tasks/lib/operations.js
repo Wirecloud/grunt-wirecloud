@@ -30,8 +30,8 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
-            if (typeof isPublic !== 'boolean') {
-                reject('Error: isPublic parameter must be a boolean.');
+            if (isPublic != null && typeof isPublic !== 'boolean') {
+                reject('Error: isPublic parameter must be a boolean or null.');
             }
 
             try {
@@ -40,10 +40,14 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
                 reject(e);
             }
 
-            var url = instance_info.url + '/api/resources?public=' + isPublic;
+            var url = new URL('api/resources', instance_info.url);
+            var params = {};
+            if (isPublic != null) {
+                params['public'] = isPublic;
+            }
             var stream = fs.createReadStream(file);
             stream.on('open', function () {
-                stream.pipe(request.post({"url": url, "headers": headers}, function (error, response, body) {
+                stream.pipe(request.post({url: url, headers: headers, qs: params}, function (error, response, body) {
                     if (error) {
                         reject("An error occurred while processing the post request: " + error.message);
                     } else if ([200, 201].indexOf(response.statusCode) === -1) {

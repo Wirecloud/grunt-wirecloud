@@ -36,9 +36,9 @@ chai.use(chaiAsPromised);
 var done, options, data;
 
 before(function () {
-    sinon.stub(grunt.log, 'error', function () {});
-    sinon.stub(grunt.log, 'ok', function () {});
-    sinon.stub(grunt.log, 'write', function () {});
+    sinon.stub(grunt.log, 'error');
+    sinon.stub(grunt.log, 'ok');
+    sinon.stub(grunt.log, 'write');
 });
 
 after(function () {
@@ -64,7 +64,7 @@ it('should fail if there is no file', function () {
 });
 
 it('should upload a MAC without overwriting', function () {
-    sinon.stub(ops, 'upload_mac', function () {
+    sinon.stub(ops, 'upload_mac').callsFake(function () {
         return new Promise(function (resolve, reject) {
             resolve();
         });
@@ -84,22 +84,10 @@ describe('Overwrite', function () {
 
     beforeEach(function () {
         options.overwrite = true;
-        sinon.stub(utils, 'getConfigData', function () {return config;});
-        sinon.stub(ops, 'mac_exists', function () {
-            return new Promise(function (resolve, reject) {
-                resolve(true);
-            });
-        });
-        sinon.stub(ops, 'uninstall_mac', function () {
-            return new Promise(function (resolve, reject) {
-                resolve();
-            });
-        });
-        sinon.stub(ops, 'upload_mac', function () {
-            return new Promise(function (resolve, reject) {
-                resolve();
-            });
-        });
+        sinon.stub(utils, 'getConfigData').returns(config);
+        sinon.stub(ops, 'mac_exists').returns(Promise.resolve(true));
+        sinon.stub(ops, 'uninstall_mac').returns(Promise.resolve());
+        sinon.stub(ops, 'upload_mac').returns(Promise.resolve());
     });
 
     afterEach(function () {
@@ -118,11 +106,7 @@ describe('Overwrite', function () {
 
     it('should not overwrite if MAC does not exist', function () {
         ops.mac_exists.restore();
-        sinon.stub(ops, 'mac_exists', function () {
-            return new Promise(function (resolve, reject) {
-                resolve(false);
-            });
-        });
+        sinon.stub(ops, 'mac_exists').returns(Promise.resolve(false));
         return task.execute(data, options, grunt, done).then(function () {
             expect(ops.uninstall_mac.called).to.equal(false);
             assert(done.calledOnce);
@@ -131,7 +115,7 @@ describe('Overwrite', function () {
 
     it('should fail to overwrite when config file cannot be read', function () {
         utils.getConfigData.restore();
-        sinon.stub(utils, 'getConfigData', function () {throw 'Cannot read';});
+        sinon.stub(utils, 'getConfigData').callsFake(function () {throw 'Cannot read';});
 
         task.execute(data, options, grunt, done);
         assert(done.withArgs(false).calledOnce);
@@ -139,11 +123,7 @@ describe('Overwrite', function () {
 
     it('should fail to overwrite when an operation throws an error', function () {
         ops.mac_exists.restore();
-        sinon.stub(ops, 'mac_exists', function () {
-            return new Promise(function (resolve, reject) {
-                reject(new Error('ERROR'));
-            });
-        });
+        sinon.stub(ops, 'mac_exists').returns(Promise.reject(new Error('ERROR')));
         return task.execute(data, options, grunt, done).then(function () {
             assert(done.withArgs(false).calledOnce);
         });

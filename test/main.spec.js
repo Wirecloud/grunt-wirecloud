@@ -30,7 +30,7 @@ function importTest(name, path) {
 describe('Wirecloud Task', function () {
 
     before(function () {
-        sinon.stub(grunt.log, 'writeln', function () {});
+        sinon.stub(grunt.log, 'writeln').callsFake(() => {});
     });
 
     after(function () {

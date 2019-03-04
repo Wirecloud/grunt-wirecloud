@@ -22,7 +22,7 @@ var request = require('request');
 
 // Should stub get_token instead, so it is not coupled with other methods' tests
 module.exports.stubReadFileSync = function stubReadFileSync(response, error) {
-    sinon.stub(jf, 'readFileSync', function () {
+    sinon.stub(jf, 'readFileSync').callsFake(function () {
         if (error) {
             throw error;
         }
@@ -38,7 +38,7 @@ module.exports.restoreReadFileSync = function restoreReadFileSync() {
 
 module.exports.stubOperation = function stubOperation(method, response, body, error) {
     var cb = function (obj, func) {func(error, response, body);};
-    sinon.stub(request, method, cb);
+    sinon.stub(request, method).callsFake(cb);
 };
 
 module.exports.restoreOperation = function restoreReadFileSync(method) {
