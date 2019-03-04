@@ -60,6 +60,7 @@ describe('Authentication', function () {
     describe('Using password', function () {
 
         beforeEach(function () {
+            sinon.stub(Date, 'now').returns(200000);
             sinon.stub(inquirer, 'prompt').returns({
                 then: function (cb) {
                     return cb({username: 'user', password: 'pass'});
@@ -69,12 +70,15 @@ describe('Authentication', function () {
         });
 
         afterEach(function () {
+            Date.now.restore();
             inquirer.prompt.restore();
             common.restoreOperation('post');
         });
 
         it('should authenticate using a password', function () {
-            var token_info = {};
+            var token_info = {
+                expires_in: 100
+            };
             common.stubOperation('post', {statusCode: 200}, JSON.stringify(token_info));
             common.stubReadFileSync({
                 'hosts': {
@@ -86,7 +90,10 @@ describe('Authentication', function () {
                 }
             });
             return Auth.get_token(grunt, 'some_instance').then((instance) => {
-                expect(instance.token_info).to.deep.equal(token_info);
+                expect(instance.token_info).to.deep.equal({
+                    expires_in: token_info.expires_in,
+                    expires_on: 280000
+                });
             });
         });
 
@@ -170,7 +177,7 @@ describe('Authentication', function () {
         });
 
         beforeEach(function () {
-            sinon.stub(Date, 'now').returns(1000);
+            sinon.stub(Date, 'now').returns(200000);
             common.stubOperation('get', {statusCode: 200}, '{"flows": ["Token"]}');
         });
 
@@ -212,7 +219,7 @@ describe('Authentication', function () {
         });
 
         it('should authenticate using an oauth token', function () {
-            var token_info = {expires_in: 10};
+            var token_info = {expires_in: 100};
             common.stubOperation('post', {statusCode: 200}, JSON.stringify(token_info));
             common.stubReadFileSync({
                 'hosts': {
@@ -225,8 +232,8 @@ describe('Authentication', function () {
             });
             var promise = Auth.get_token(grunt, 'some_instance');
             return promise.then((instance_info) => {
-                expect(instance_info.token_info.expires_in).to.equal(10);
-                expect(instance_info.token_info.expires_on).to.equal(990);
+                expect(instance_info.token_info.expires_in).to.equal(100);
+                expect(instance_info.token_info.expires_on).to.equal(280000);
             });
         });
     });

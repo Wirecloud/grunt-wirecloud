@@ -74,6 +74,7 @@ var get_final_token_using_password_credentials = function get_final_token_using_
 
             var config = utils.read_config();
             var token_info = JSON.parse(body);
+            token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
             instance_info.token_info = token_info;
             grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
@@ -109,7 +110,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
         }
 
         var token_info = JSON.parse(body);
-        token_info.expires_on = Date.now() + token_info.expires_in - 20;
+        token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
         instance_info.token_info = token_info;
         grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
@@ -225,7 +226,7 @@ const refresh_token = function refresh_token(grunt, instance_name, instance_info
 
                 var config = utils.read_config();
                 var token_info = JSON.parse(body);
-                token_info.expires_on = Date.now() + token_info.expires_in - 20;
+                token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
                 instance_info.token_info = token_info;
                 grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
