@@ -83,7 +83,7 @@ module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_
             request.del({"url": url, "headers": headers}, function (error, response) {
                 if (error) {
                     reject("An error occurred while processing the post request: " + error.message);
-                } else if ([200, 201].indexOf(response.statusCode) === -1) {
+                } else if ([404, 200, 201].indexOf(response.statusCode) === -1) {
                     reject(new Error('Unexpected error code: ' + response.statusCode));
                 } else {
                     resolve();

@@ -65,8 +65,18 @@ describe('Delete', function () {
         });
     });
 
-    it('should fail to delete when there is an unexpected response', function () {
+    it('should ignore 404 status codes', function () {
+        // 404 means does not exists, so it can be seen as a success from the
+        // point of view of deleting the component
         var response = {statusCode: 404};
+        common.stubOperation('del', response);
+        return ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
+            expect(request.del.called).to.equal(true);
+        });
+    });
+
+    it('should fail to delete when there is an unexpected response', function () {
+        var response = {statusCode: 409};
         common.stubOperation('del', response);
         var promise = ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
