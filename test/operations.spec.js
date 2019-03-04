@@ -88,25 +88,25 @@ describe('Check', function () {
 
     afterEach(function () {
         auth.get_token.restore();
-        request.get.restore();
+        request.head.restore();
     });
 
     it('should check if a MAC exists', function () {
-        common.stubOperation('get', {statusCode:200});
+        common.stubOperation('head', {statusCode: 200});
         return ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
-            expect(request.get.called).to.equal(true);
+            expect(request.head.called).to.equal(true);
         });
     });
 
     it ('should return true if the server responds with 200 (MAC exist)', function () {
-        common.stubOperation('get', {statusCode:200});
+        common.stubOperation('head', {statusCode: 200});
         return ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function (exists) {
             expect(exists).to.equal(true);
         });
     });
 
     it('should return false if the server responds with 404 (MAC does not exist)', function () {
-        common.stubOperation('get', {statusCode:404, error: {}});
+        common.stubOperation('head', {statusCode: 404, error: {}});
         return ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function (exists) {
             expect(exists).to.equal(false);
         });
@@ -114,14 +114,14 @@ describe('Check', function () {
 
     it('should fail to check a MAC when server responds with error other than 404', function () {
         var response = {statusCode: 400, error: {}};
-        common.stubOperation('get', response);
+        common.stubOperation('head', response);
         var promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
     });
 
     it('should fail to check when an error occurs in the request', function () {
         var error = {message: "error message"};
-        common.stubOperation('get', undefined, undefined, error);
+        common.stubOperation('head', undefined, undefined, error);
         var promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
     });

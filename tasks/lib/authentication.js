@@ -19,9 +19,9 @@
 var inquirer = require('inquirer');
 var request = require('request');
 var jf = require('jsonfile');
-var URL = require('url');
 var webdriver = require('selenium-webdriver');
 const {until, Condition} = require('selenium-webdriver');
+const URL = require('url');
 
 var utils = require('./utils');
 
@@ -190,7 +190,9 @@ var auth = function auth(grunt, instance_name, instance_info) {
 const refresh_token = function refresh_token(grunt, instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
-        request.get(URL.resolve(instance_info.url, '.well-known/oauth'), (error, response, info_body) => {
+        const url = new URL('.well-known/oauth', instance_info.url);
+        grunt.log.verbose.writeln('Requesting OAuth2 details (' + url + ') ...');
+        request.get(url.toString(), (error, response, info_body) => {
             if (error || response.statusCode !== 200) {
                 reject(new Error("OAuth 2 configuration couldn't be retrieved from WireCloud server"));
                 return;
@@ -220,7 +222,7 @@ const refresh_token = function refresh_token(grunt, instance_name, instance_info
                     reject('expired refresh token');
                     return;
                 } else if (response.statusCode !== 200) {
-                    reject('Unexpected response from server');
+                    reject('Unexpected response from server while refresing access token: ' + response.statusCode);
                     return;
                 }
 

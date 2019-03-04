@@ -18,6 +18,7 @@
 
 var fs = require('fs');
 var request = require('request');
+const URL = require('url');
 
 var auth = require('./authentication');
 
@@ -40,12 +41,13 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
                 reject(e);
             }
 
-            var url = new URL('api/resources', instance_info.url);
+            var url = URL.resolve(instance_info.url, 'api/resources');
             var params = {};
             if (isPublic != null) {
                 params['public'] = isPublic;
             }
             var stream = fs.createReadStream(file);
+            grunt.log.debug('Uploading the component to ' + url);
             stream.on('open', function () {
                 stream.pipe(request.post({url: url, headers: headers, qs: params}, function (error, response, body) {
                     if (error) {
@@ -77,6 +79,7 @@ module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_
                         '/' + mac_name +
                         '/' + mac_version +
                         '?affected=true';
+            grunt.log.debug('Uninstalling component (delete ' + url + ')');
             request.del({"url": url, "headers": headers}, function (error, response) {
                 if (error) {
                     reject("An error occurred while processing the post request: " + error.message);
@@ -98,20 +101,20 @@ module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, 
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
-            var url = instance_info.url + '/api/resource' +
-                        '/' + mac_vendor +
-                        '/' + mac_name +
-                        '/' + mac_version;
-            request.get({"url": url, "headers": headers}, function (error, response) {
+            var url = URL.resolve(
+                instance_info.url,
+                'api/resource' +
+                '/' + mac_vendor +
+                '/' + mac_name +
+                '/' + mac_version
+            );
+            grunt.log.debug('Checking mac existance (' + url + ')');
+            request.head({"url": url, "headers": headers}, function (error, response) {
                 if (error) {
                     reject("An error occurred while processing the post request: " + error.message);
-                } else if ([200].indexOf(response.statusCode) !== -1) {
-                    resolve(true);
-                }
-                else if ([404].indexOf(response.statusCode) !== -1) {
-                    resolve(false);
-                }
-                else {
+                } else if ([200, 404].indexOf(response.statusCode) !== -1) {
+                    resolve(response.statusCode === 200);
+                } else {
                     reject(new Error('Unexpected error code: ' + response.statusCode));
                 }
             });

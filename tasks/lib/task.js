@@ -40,9 +40,7 @@ var overwrite = function overwrite(file, instance, done, grunt, isPublic) {
     var configData = configParser.getData();
 
     // Check if MAC is already uploaded
-    return ops.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version).then(function (exists) {
-        return exists;
-    })
+    return ops.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version)
 
     // Delete MAC if already uploaded
     .then(function (exists) {
