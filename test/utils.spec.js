@@ -16,20 +16,20 @@
 
 "use strict";
 
-var chai = require('chai');
-var expect = chai.expect;
-var AdmZip = require('adm-zip');
-var sinon = require('sinon');
+const chai = require('chai');
+const expect = chai.expect;
+const AdmZip = require('adm-zip');
+const sinon = require('sinon');
 
-var Utils = require('../tasks/lib/utils');
-var common = require('./main.spec').common;
+const Utils = require('../tasks/lib/utils');
+const common = require('./helpers/common');
 
 describe('config.xml file', function () {
 
     it('should get config data from zip file', function () {
-        var zip = new AdmZip('test/fixtures/correct.wgt');
-        var expectedData = zip.getEntries()[0].getData().toString();
-        var actualData = Utils.getConfigData('test/fixtures/correct.wgt');
+        const zip = new AdmZip('test/fixtures/correct.wgt');
+        const expectedData = zip.getEntries()[0].getData().toString();
+        const actualData = Utils.getConfigData('test/fixtures/correct.wgt');
         expect(expectedData).to.equal(actualData);
     });
 
@@ -53,19 +53,19 @@ describe('grunt-wirecloud config file', function () {
         });
 
         it('should read the config file',function () {
-            var expectedContent = 'some_content';
+            const expectedContent = 'some_content';
             common.stubReadFileSync(expectedContent);
             expect(Utils.read_config()).to.equal(expectedContent);
         });
 
         it('should fail with ENOENT', function () {
-            var expectedError = {code: 'ENOENT'};
+            const expectedError = {code: 'ENOENT'};
             common.stubReadFileSync(null, expectedError);
             expect(Utils.read_config()).to.be.empty;
         });
 
         it('should with error other than ENOENT', function () {
-            var expectedError = 'Error';
+            const expectedError = 'Error';
             common.stubReadFileSync(null, expectedError);
             expect(Utils.read_config).to.throw(expectedError);
         });
@@ -75,12 +75,12 @@ describe('grunt-wirecloud config file', function () {
 
 describe('Validate no empty', function () {
     it('should require a value when no value is passed', function () {
-        var errorMessage = 'A value is required.';
+        const errorMessage = 'A value is required.';
         expect(Utils.validate_no_empty()).to.equal(errorMessage);
     });
 
     it('should require a value when an empty string is passed', function () {
-        var errorMessage = 'A value is required.';
+        const errorMessage = 'A value is required.';
         expect(Utils.validate_no_empty('')).to.equal(errorMessage);
     });
 

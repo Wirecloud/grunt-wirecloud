@@ -16,14 +16,14 @@
 
 "use strict";
 
-var inquirer = require('inquirer');
-var request = require('request');
-var jf = require('jsonfile');
-var webdriver = require('selenium-webdriver');
+const inquirer = require('inquirer');
+const request = require('request');
+const jf = require('jsonfile');
+const webdriver = require('selenium-webdriver');
 const {until, Condition} = require('selenium-webdriver');
 const URL = require('url');
 
-var utils = require('./utils');
+const utils = require('./utils');
 
 until.urlStartsWith = function urlStartsWith(base_url) {
     base_url = URL.parse(base_url);
@@ -40,9 +40,9 @@ until.urlStartsWith = function urlStartsWith(base_url) {
     );
 };
 
-var get_final_token_using_password_credentials = function get_final_token_using_password_credentials(grunt, instance_name, instance_info, url, username, password, redirect_uri) {
+const get_final_token_using_password_credentials = function get_final_token_using_password_credentials(grunt, instance_name, instance_info, url, username, password, redirect_uri) {
     return new Promise(function (resolve, reject) {
-        var body = {
+        const body = {
             'grant_type': 'password',
             'redirect_uri': redirect_uri,
             'username': username,
@@ -50,7 +50,7 @@ var get_final_token_using_password_credentials = function get_final_token_using_
         };
 
         // Required for KeyRock 2.0
-        var headers = {
+        const headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': 'Basic ' + new Buffer(instance_info.client_id + ":" + instance_info.client_secret).toString('base64')
@@ -72,8 +72,8 @@ var get_final_token_using_password_credentials = function get_final_token_using_
                 return;
             }
 
-            var config = utils.read_config();
-            var token_info = JSON.parse(body);
+            const config = utils.read_config();
+            const token_info = JSON.parse(body);
             token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
             instance_info.token_info = token_info;
             grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
@@ -88,8 +88,8 @@ var get_final_token_using_password_credentials = function get_final_token_using_
     });
 };
 
-var get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
-    var body = {
+const get_final_token = function get_final_token(grunt, instance_name, instance_info, url, code, redirect_uri, resolve, reject) {
+    const body = {
         'code': code,
         'grant_type': 'authorization_code',
         'client_id': instance_info.client_id,
@@ -109,13 +109,13 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
             return;
         }
 
-        var token_info = JSON.parse(body);
+        const token_info = JSON.parse(body);
         token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
         instance_info.token_info = token_info;
         grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
 
         // Store auth info
-        var config = utils.read_config();
+        const config = utils.read_config();
 
         config.hosts[instance_name].token_info = token_info;
         jf.writeFileSync(utils.get_config_file_name(), config, {spaces: 4});
@@ -126,7 +126,7 @@ var get_final_token = function get_final_token(grunt, instance_name, instance_in
 };
 
 
-var auth = function auth(grunt, instance_name, instance_info) {
+const auth = function auth(grunt, instance_name, instance_info) {
 
     return new Promise(function (resolve, reject) {
         request.get(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
@@ -135,11 +135,11 @@ var auth = function auth(grunt, instance_name, instance_info) {
                 return;
             }
 
-            var info = JSON.parse(body);
-            var redirect_uri;
+            const info = JSON.parse(body);
+            let redirect_uri;
 
             if (Array.isArray(info.flows) && info.flows.indexOf("Resource Owner Password Credentials Grant") !== -1) {
-                var questions = [
+                const questions = [
                     {
                         type: "input",
                         name: "username",
@@ -164,20 +164,20 @@ var auth = function auth(grunt, instance_name, instance_info) {
                     redirect_uri = info.default_redirect_uri;
                 }
 
-                var auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
+                const auth_url = info.auth_endpoint + '?response_type=code&client_id=' + encodeURIComponent(instance_info.client_id) + '&redirect_uri=' + encodeURIComponent(redirect_uri);
 
                 grunt.log.verbose.writeln("Redirect uri: " + redirect_uri);
                 grunt.log.verbose.writeln("Redirecting to: " + auth_url);
-                var driver = new webdriver.Builder()
+                const driver = new webdriver.Builder()
                     .forBrowser('firefox')
                     .build();
 
                 driver.get(auth_url);
-                driver.wait(until.urlStartsWith(redirect_uri), 24*60*60*1000);
+                driver.wait(until.urlStartsWith(redirect_uri), 24 * 60 * 60 * 1000);
                 driver.getCurrentUrl().then(function (current_url) {
                     driver.quit();
                     current_url = URL.parse(current_url, true);
-                    var code = current_url.query.code;
+                    const code = current_url.query.code;
                     grunt.log.debug('Code: ' + code);
                     get_final_token(grunt, instance_name, instance_info, info.token_endpoint, code, redirect_uri, resolve, reject);
                 }, reject);
@@ -198,15 +198,15 @@ const refresh_token = function refresh_token(grunt, instance_name, instance_info
                 return;
             }
 
-            var info = JSON.parse(info_body);
-            var body = {
+            const info = JSON.parse(info_body);
+            const body = {
                 'refresh_token': instance_info.token_info.refresh_token,
                 'grant_type': 'refresh_token',
                 'client_id': instance_info.client_id,
                 'client_secret': instance_info.client_secret
             };
 
-            var headers = {
+            const headers = {
                 'Accept': 'application/json',
                 'Content-Type': 'application/x-www-form-urlencoded'
             };
@@ -226,8 +226,8 @@ const refresh_token = function refresh_token(grunt, instance_name, instance_info
                     return;
                 }
 
-                var config = utils.read_config();
-                var token_info = JSON.parse(body);
+                const config = utils.read_config();
+                const token_info = JSON.parse(body);
                 token_info.expires_on = Date.now() + (token_info.expires_in - 20) * 1000;
                 instance_info.token_info = token_info;
                 grunt.log.debug('Token Info: ' + JSON.stringify(token_info));
@@ -244,8 +244,8 @@ const refresh_token = function refresh_token(grunt, instance_name, instance_info
 
 };
 
-var create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
-    var questions = [
+const create_instance_interactive = function create_instance_interactive(grunt, instance_name) {
+    const questions = [
         {
             type: "input",
             name: "url",
@@ -267,14 +267,14 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
     ];
 
     return inquirer.prompt(questions).then(function (answers) {
-        var instance_info = {
+        const instance_info = {
             url: answers.url,
             client_id: answers.client_id,
             client_secret: answers.client_secret
         };
 
         // Store auth info
-        var config = utils.read_config();
+        const config = utils.read_config();
         if (typeof config.hosts !== 'object') {
             config.hosts = {};
         }
@@ -287,11 +287,11 @@ var create_instance_interactive = function create_instance_interactive(grunt, in
     });
 };
 
-var get_token = function get_token(grunt, instance_name) {
+const get_token = function get_token(grunt, instance_name) {
 
-    var config = utils.read_config();
+    const config = utils.read_config();
     if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
-        var instance_info = config.hosts[instance_name];
+        const instance_info = config.hosts[instance_name];
         if (typeof instance_info.token_info === 'object' && typeof instance_info.token_info.access_token === 'string') {
             if (instance_info.token_info.expires_on == null || instance_info.token_info.expires_on <= Date.now()) {
                 return refresh_token(grunt, instance_name, instance_info);

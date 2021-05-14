@@ -14,26 +14,27 @@
  * limitations under the License.
  */
 
+/* eslint-disable mocha/no-top-level-hooks */
+
 "use strict";
 
-var request = require('request');
-var chai = require('chai');
-var expect = chai.expect;
-var fs = require('fs');
-var grunt = require('grunt');
-var sinon = require('sinon');
-var inquirer = require('inquirer');
-var chaiAsPromised = require('chai-as-promised');
+const request = require('request');
+const chai = require('chai');
+const expect = chai.expect;
+const fs = require('fs');
+const grunt = require('grunt');
+const sinon = require('sinon');
+const chaiAsPromised = require('chai-as-promised');
 
-var common = require('./main.spec').common;
-var ops = require('../tasks/lib/operations');
-var auth = require('../tasks/lib/authentication');
+const common = require('./helpers/common');
+const ops = require('../tasks/lib/operations');
+const auth = require('../tasks/lib/authentication');
 
 chai.use(chaiAsPromised);
 
 const instance_info = {
-    'url': 'http://example.com',
-    'token_info': {
+    url: 'http://example.com',
+    token_info: {
         'access_token': 'some_token',
         'expires_on': Date.now() + 1000000
     }
@@ -41,15 +42,15 @@ const instance_info = {
 
 beforeEach(function () {
     common.stubReadFileSync({
-        'hosts': {
-            'some_instance': instance_info
+        hosts: {
+            some_instance: instance_info
         }
     });
 });
 
 describe('Delete', function () {
 
-    beforeEach(() => {
+    beforeEach(function () {
         sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
     });
 
@@ -68,7 +69,7 @@ describe('Delete', function () {
     it('should ignore 404 status codes', function () {
         // 404 means does not exists, so it can be seen as a success from the
         // point of view of deleting the component
-        var response = {statusCode: 404};
+        const response = {statusCode: 404};
         common.stubOperation('del', response);
         return ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version').then(function () {
             expect(request.del.called).to.equal(true);
@@ -76,23 +77,23 @@ describe('Delete', function () {
     });
 
     it('should fail to delete when there is an unexpected response', function () {
-        var response = {statusCode: 409};
+        const response = {statusCode: 409};
         common.stubOperation('del', response);
-        var promise = ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
+        const promise = ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
     });
 
     it('should fail to delete when an error occurs in the request', function () {
-        var error = {message: "error message"};
+        const error = {message: "error message"};
         common.stubOperation('del', undefined, undefined, error);
-        var promise = ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
+        const promise = ops.uninstall_mac(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
     });
 });
 
 describe('Check', function () {
 
-    beforeEach(() => {
+    beforeEach(function () {
         sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
     });
 
@@ -108,7 +109,7 @@ describe('Check', function () {
         });
     });
 
-    it ('should return true if the server responds with 200 (MAC exist)', function () {
+    it('should return true if the server responds with 200 (MAC exist)', function () {
         common.stubOperation('head', {statusCode: 200});
         return ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version').then(function (exists) {
             expect(exists).to.equal(true);
@@ -123,25 +124,25 @@ describe('Check', function () {
     });
 
     it('should fail to check a MAC when server responds with error other than 404', function () {
-        var response = {statusCode: 400, error: {}};
+        const response = {statusCode: 400, error: {}};
         common.stubOperation('head', response);
-        var promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
+        const promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('Unexpected error code: ' + response.statusCode);
     });
 
     it('should fail to check when an error occurs in the request', function () {
-        var error = {message: "error message"};
+        const error = {message: "error message"};
         common.stubOperation('head', undefined, undefined, error);
-        var promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
+        const promise = ops.mac_exists(grunt, 'some_instance', 'name', 'vendor', 'version');
         return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
     });
 });
 
 describe('Upload', function () {
 
-    function stubStream(event) {
+    const stubStream = function stubStream(event) {
         // Stub ReadStream.prototype 'on' and 'pipe' methods
-        var Obj = {
+        const Obj = {
             on: function (receivedEvent, cb) {
                 if (event === receivedEvent) {
                     cb();
@@ -151,16 +152,16 @@ describe('Upload', function () {
         };
         sinon.stub(fs, 'createReadStream').returns(Obj);
         sinon.stub(fs, 'statSync').returns({size: 1});
-    }
+    };
 
-    function restoreStream() {
+    const restoreStream = function restoreStream() {
         if (fs.createReadStream.restore) {
             fs.createReadStream.restore();
         }
         if (fs.statSync.restore) {
             fs.statSync.restore();
         }
-    }
+    };
 
     beforeEach(function () {
         sinon.stub(auth, 'get_token').returns(Promise.resolve(instance_info));
@@ -185,20 +186,20 @@ describe('Upload', function () {
     it('should resolve if sever response is 200 or 201', function () {
         // Test status 200
         common.stubOperation('post', {statusCode: 200});
-        var resp200 = ops.upload_mac(grunt, "some_instance", "File", false);
+        const resp200 = ops.upload_mac(grunt, "some_instance", "File", false);
         expect(resp200).to.be.fulfilled;
 
         request.post.restore(); // Restore post method to stub with a new statusCode
 
         // Test status 201
         common.stubOperation('post', {statusCode: 201});
-        var resp201 = ops.upload_mac(grunt, "some_instance", "File", false);
+        const resp201 = ops.upload_mac(grunt, "some_instance", "File", false);
         expect(resp201).to.be.fulfilled;
     });
 
     it('should reject if server responds with an error', function () {
         common.stubOperation('post', {statusCode: 400});
-        var promise = ops.upload_mac(grunt, "some_instance", "File", false);
+        const promise = ops.upload_mac(grunt, "some_instance", "File", false);
         expect(promise).to.be.rejectedWith('Error: Unexpected error code: 400');
     });
 
@@ -207,35 +208,35 @@ describe('Upload', function () {
         restoreStream();
         stubStream('error');
 
-        var promise = ops.upload_mac(grunt, "some_instance", "File", false);
+        const promise = ops.upload_mac(grunt, "some_instance", "File", false);
         expect(promise).to.be.rejected;
     });
 
     it('should reject if filesystem can\'t read file\'s size', function () {
         restoreStream(); // Restore stream so it executes the real method fs.statSync
-        var promise = ops.upload_mac(grunt, "some_instance", "File", false);
+        const promise = ops.upload_mac(grunt, "some_instance", "File", false);
         expect(promise).to.be.rejected;
     });
 
     it('should fail to upload when an error occurs in the request', function () {
-        var error = {message: "error message"};
+        const error = {message: "error message"};
         common.stubOperation('post', undefined, undefined, error);
-        var promise = ops.upload_mac(grunt, 'some_instance', 'File', false);
+        const promise = ops.upload_mac(grunt, 'some_instance', 'File', false);
         return expect(promise).to.be.rejectedWith('An error occurred while processing the post request: ' + error.message);
     });
 
     it('should upload a MAC making it public', function () {
         common.stubOperation('post', {statusCode: 200});
         return ops.upload_mac(grunt, "some_instance", "File", true).then(function () {
-            var qs = request.post.args[0][0].qs;
+            const qs = request.post.args[0][0].qs;
             expect(qs).to.include({public: true});
         });
     });
 
     it('should fail to upload a MAC if the isPublic parameter is not a boolean', function () {
-        var publicErrorMsg = 'Error: isPublic parameter must be a boolean or null.';
+        const publicErrorMsg = 'Error: isPublic parameter must be a boolean or null.';
         common.stubOperation('post', {statusCode: 200});
-        var promise = ops.upload_mac(grunt, "some_instance", "File", "Not a boolean");
+        const promise = ops.upload_mac(grunt, "some_instance", "File", "Not a boolean");
         expect(promise).to.be.rejectedWith(publicErrorMsg);
     });
 });

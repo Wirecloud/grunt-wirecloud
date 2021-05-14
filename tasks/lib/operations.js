@@ -16,17 +16,17 @@
 
 "use strict";
 
-var fs = require('fs');
-var request = require('request');
+const fs = require('fs');
+const request = require('request');
 const URL = require('url');
 
-var auth = require('./authentication');
+const auth = require('./authentication');
 
 module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPublic) {
 
     return new Promise(function (resolve, reject) {
         auth.get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
+            const headers = {
                 'Content-Type': 'application/octet-stream',
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
@@ -36,17 +36,17 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
             }
 
             try {
-                headers['Content-Length'] = fs.statSync(file)['size'];
+                headers['Content-Length'] = fs.statSync(file).size;
             } catch (e) {
                 reject(e);
             }
 
-            var url = URL.resolve(instance_info.url, 'api/resources');
-            var params = {};
+            const url = URL.resolve(instance_info.url, 'api/resources');
+            const params = {};
             if (isPublic != null) {
-                params['public'] = isPublic;
+                params.public = isPublic;
             }
-            var stream = fs.createReadStream(file);
+            const stream = fs.createReadStream(file);
             grunt.log.debug('Uploading the component to ' + url);
             stream.on('open', function () {
                 stream.pipe(request.post({url: url, headers: headers, qs: params}, function (error, response, body) {
@@ -69,12 +69,12 @@ module.exports.upload_mac = function upload_mac(grunt, instance_name, file, isPu
 module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_name, mac_vendor, mac_version) {
     return new Promise(function (resolve, reject) {
         auth.get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
+            const headers = {
                 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
-            var url = instance_info.url + '/api/resource' +
+            const url = instance_info.url + '/api/resource' +
                         '/' + mac_vendor +
                         '/' + mac_name +
                         '/' + mac_version +
@@ -96,12 +96,12 @@ module.exports.uninstall_mac = function uninstall_mac(grunt, instance_name, mac_
 module.exports.mac_exists = function mac_exists(grunt, instance_name, mac_name, mac_vendor, mac_version) {
     return new Promise(function (resolve, reject) {
         auth.get_token(grunt, instance_name).then(function (instance_info) {
-            var headers = {
+            const headers = {
                 'Accept': 'application/json',
                 'Authorization': 'Bearer ' + instance_info.token_info.access_token
             };
 
-            var url = URL.resolve(
+            const url = URL.resolve(
                 instance_info.url,
                 'api/resource' +
                 '/' + mac_vendor +

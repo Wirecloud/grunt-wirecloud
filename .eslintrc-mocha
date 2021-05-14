@@ -9,5 +9,8 @@
   },
   "plugins": [
     "mocha"
-  ]
+  ],
+  "rules": {
+    "mocha/no-setup-in-describe": "off"
+  }
 }
