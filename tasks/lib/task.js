@@ -71,7 +71,7 @@ module.exports.execute = function execute(data, options, grunt, done) {
 
     const instance = grunt.option('target') ? grunt.option('target') : options.instance;
     const isPublic = grunt.option('public') ? grunt.option('public') : options.public;
-    const msg = 'Uploading ' + data.file + ' to ' + instance + '... ';
+    const msg = `Uploading ${data.file} to ${instance}... `;
     grunt.log.write(msg);
 
 

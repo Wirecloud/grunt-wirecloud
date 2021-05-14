@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2021 Future Internet Consulting and Development Solutions S.L.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,8 +36,33 @@ chai.use(chaiAsPromised);
 
 describe('Authentication', function () {
 
+    beforeEach(function () {
+        if ("WIRECLOUD_CATALOGUE_AUTH_TOKEN" in process.env) {
+            delete process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN;
+        }
+    });
+
     afterEach(function () {
         common.restoreOperation('get');
+    });
+
+    it('should use token info from the WIRECLOUD_CATALOGUE_AUTH_TOKEN environment variable if configured', function () {
+        const token_value = "mypermanenttoken";
+        process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN = token_value;
+        common.stubReadFileSync({
+            'hosts': {
+                'some_instance': {
+                    'url': 'http://example.com',
+                    'token_info': {
+                        'access_token': 'notused',
+                        'expires_on': Infinity
+                    }
+                }
+            }
+        });
+        return Auth.get_token(grunt, 'some_instance').then((instance) => {
+            expect(instance.token_info.access_token).to.deep.equal(token_value);
+        });
     });
 
     it('should get an existing token', function () {

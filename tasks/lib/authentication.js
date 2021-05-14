@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2021 Future Internet Consulting and Development Solutions S.L.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -288,6 +289,10 @@ const create_instance_interactive = function create_instance_interactive(grunt, 
 };
 
 const get_token = function get_token(grunt, instance_name) {
+
+    if (process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN != null) {
+        return Promise.resolve({token_info: {access_token: process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN}});
+    }
 
     const config = utils.read_config();
     if (typeof config.hosts === 'object' && typeof config.hosts[instance_name] === 'object') {
