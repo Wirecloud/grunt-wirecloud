@@ -132,8 +132,7 @@ const auth = function auth(grunt, instance_name, instance_info) {
     return new Promise(function (resolve, reject) {
         request.get(URL.resolve(instance_info.url, '.well-known/oauth'), function (error, response, body) {
             if (error || response.statusCode !== 200) {
-                reject();
-                return;
+                return reject();
             }
 
             const info = JSON.parse(body);
@@ -308,8 +307,8 @@ const get_token = function get_token(grunt, instance_name) {
         }
     } else {
         grunt.log.writeln("\n");
-        grunt.log.writeln(instance_name + " instance is not configured. Creating it:");
-        return create_instance_interactive(grunt, instance_name).then(function (instance_info) {
+        grunt.log.writeln(`${instance_name} instance is not configured yet. Creating it:`);
+        return create_instance_interactive(grunt, instance_name).then((instance_info) => {
             return auth(grunt, instance_name, instance_info);
         });
     }
