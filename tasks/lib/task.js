@@ -16,11 +16,11 @@
 
 "use strict";
 
-var utils = require('./utils');
-var ops = require('./operations');
-var ConfigParser = require('wirecloud-config-parser');
+const utils = require('./utils');
+const ops = require('./operations');
+const ConfigParser = require('wirecloud-config-parser');
 
-var error = function error(done, grunt, e) {
+const error = function error(done, grunt, e) {
     if (typeof e === 'string') {
         grunt.log.error(e);
     } else {
@@ -29,37 +29,37 @@ var error = function error(done, grunt, e) {
     done(false);
 };
 
-var overwrite = function overwrite(file, instance, done, grunt, isPublic) {
-    var configParser, content;
+const overwrite = function overwrite(file, instance, done, grunt, isPublic) {
+    let configParser, content;
     try {
         content = utils.getConfigData(file);
         configParser = new ConfigParser({content: content, validate: true});
     } catch (e) {
         return error(done, grunt, e);
     }
-    var configData = configParser.getData();
+    const configData = configParser.getData();
 
     // Check if MAC is already uploaded
     return ops.mac_exists(grunt, instance, configData.name, configData.vendor, configData.version)
 
     // Delete MAC if already uploaded
-    .then(function (exists) {
-        if (exists) {
-            return ops.uninstall_mac(grunt, instance, configData.name, configData.vendor, configData.version);
-        }
-    })
+        .then(function (exists) {
+            if (exists) {
+                return ops.uninstall_mac(grunt, instance, configData.name, configData.vendor, configData.version);
+            }
+        })
 
     // Upload new MAC
-    .then(ops.upload_mac.bind(null, grunt, instance, file, isPublic))
+        .then(ops.upload_mac.bind(null, grunt, instance, file, isPublic))
 
     // OK message and finish
-    .then(function () {
-        grunt.log.ok();
-        done();
-    })
+        .then(function () {
+            grunt.log.ok();
+            done();
+        })
 
     // Error catcher for all previous promises
-    .catch(error.bind(null, done, grunt));
+        .catch(error.bind(null, done, grunt));
 };
 
 module.exports.execute = function execute(data, options, grunt, done) {
@@ -69,9 +69,9 @@ module.exports.execute = function execute(data, options, grunt, done) {
         return done(false);
     }
 
-    var instance = grunt.option('target') ? grunt.option('target') : options.instance;
-    var isPublic = grunt.option('public') ? grunt.option('public') : options.public;
-    var msg = 'Uploading ' + data.file + ' to ' + instance + '... ';
+    const instance = grunt.option('target') ? grunt.option('target') : options.instance;
+    const isPublic = grunt.option('public') ? grunt.option('public') : options.public;
+    const msg = `Uploading ${data.file} to ${instance}... `;
     grunt.log.write(msg);
 
 

@@ -16,11 +16,11 @@
 
 "use strict";
 
-var AdmZip = require('adm-zip'),
+const AdmZip = require('adm-zip'),
     path = require('path'),
     jf = require('jsonfile');
 
-var get_user_home = function get_user_home() {
+const get_user_home = function get_user_home() {
     return process.env[(process.platform === 'win32') ? 'USERPROFILE' : 'HOME'];
 };
 
@@ -36,7 +36,7 @@ module.exports.get_config_file_name = function get_config_file_name() {
 };
 
 module.exports.read_config = function read_config() {
-    var config_file = exports.get_config_file_name();
+    const config_file = exports.get_config_file_name();
 
     try {
         return jf.readFileSync(config_file);
@@ -50,7 +50,7 @@ module.exports.read_config = function read_config() {
 };
 
 module.exports.getConfigData = function getConfigData(configPath) {
-    var content, wgtData;
+    let content, wgtData;
     try {
         wgtData = new AdmZip(configPath);
     } catch (e) {

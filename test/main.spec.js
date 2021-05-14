@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
+/* eslint-disable mocha/no-hooks-for-single-case */
+
 "use strict";
 
-var sinon = require('sinon');
-var grunt = require('grunt');
+const sinon = require('sinon');
+const grunt = require('grunt');
 
-exports.common = require('./helpers/common');
+const common = require('./helpers/common');
 
-function importTest(name, path) {
+const importTest = function importTest(name, path) {
     describe(name, function () {
         require(path);
     });
@@ -38,7 +40,7 @@ describe('Wirecloud Task', function () {
     });
 
     afterEach(function () {
-        exports.common.restoreReadFileSync();
+        common.restoreReadFileSync();
     });
 
     importTest('Token management', './authentication.spec');

@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
+/* eslint-disable mocha/no-top-level-hooks */
+
 "use strict";
 
-var chai = require('chai');
-var expect = chai.expect;
-var assert = chai.assert;
-var fs = require('fs');
-var grunt = require('grunt');
-var sinon = require('sinon');
-var inquirer = require('inquirer');
-var chaiAsPromised = require('chai-as-promised');
-var ConfigParser = require('wirecloud-config-parser');
+const chai = require('chai');
+const expect = chai.expect;
+const assert = chai.assert;
+const fs = require('fs');
+const grunt = require('grunt');
+const sinon = require('sinon');
+const chaiAsPromised = require('chai-as-promised');
 
-var common = require('./main.spec').common;
-var task = require('../tasks/lib/task');
-var ops = require('../tasks/lib/operations');
-var utils = require('../tasks/lib/utils');
+const task = require('../tasks/lib/task');
+const ops = require('../tasks/lib/operations');
+const utils = require('../tasks/lib/utils');
 
 chai.use(chaiAsPromised);
 
-var done, options, data;
+let done, options, data;
 
 before(function () {
     sinon.stub(grunt.log, 'error');
@@ -58,7 +57,7 @@ beforeEach(function () {
 });
 
 it('should fail if there is no file', function () {
-    var data = {};
+    const data = {};
     task.execute(data, options, grunt, done);
     assert(done.withArgs(false).calledOnce);
 });
@@ -77,7 +76,7 @@ it('should upload a MAC without overwriting', function () {
 });
 
 describe('Overwrite', function () {
-    var config;
+    let config;
     before(function () {
         config = fs.readFileSync('test/fixtures/sample-config.xml');
     });

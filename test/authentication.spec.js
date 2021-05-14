@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+ * Copyright (c) 2021 Future Internet Consulting and Development Solutions S.L.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,31 +17,56 @@
 
 "use strict";
 
-var grunt = require('grunt');
-var request = require('request');
-var sinon = require('sinon');
-var chai = require('chai');
-var expect = chai.expect;
-var chaiAsPromised = require('chai-as-promised');
-var inquirer = require('inquirer');
-var webdriver = require('selenium-webdriver');
-var until = require('selenium-webdriver').until;
-var URL = require('url');
-var jf = require('jsonfile');
+const grunt = require('grunt');
+const request = require('request');
+const sinon = require('sinon');
+const chai = require('chai');
+const expect = chai.expect;
+const chaiAsPromised = require('chai-as-promised');
+const inquirer = require('inquirer');
+const webdriver = require('selenium-webdriver');
+const until = require('selenium-webdriver').until;
+const URL = require('url');
+const jf = require('jsonfile');
 
-var common = require('./main.spec').common;
-var Auth = require('../tasks/lib/authentication');
+const common = require('./helpers/common');
+const Auth = require('../tasks/lib/authentication');
 
 chai.use(chaiAsPromised);
 
 describe('Authentication', function () {
 
+    beforeEach(function () {
+        if ("WIRECLOUD_CATALOGUE_AUTH_TOKEN" in process.env) {
+            delete process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN;
+        }
+    });
+
     afterEach(function () {
         common.restoreOperation('get');
     });
 
+    it('should use token info from the WIRECLOUD_CATALOGUE_AUTH_TOKEN environment variable if configured', function () {
+        const token_value = "mypermanenttoken";
+        process.env.WIRECLOUD_CATALOGUE_AUTH_TOKEN = token_value;
+        common.stubReadFileSync({
+            'hosts': {
+                'some_instance': {
+                    'url': 'http://example.com',
+                    'token_info': {
+                        'access_token': 'notused',
+                        'expires_on': Infinity
+                    }
+                }
+            }
+        });
+        return Auth.get_token(grunt, 'some_instance').then((instance) => {
+            expect(instance.token_info.access_token).to.deep.equal(token_value);
+        });
+    });
+
     it('should get an existing token', function () {
-        var token_value = 'mytoken';
+        const token_value = 'mytoken';
         common.stubReadFileSync({
             'hosts': {
                 'some_instance': {
@@ -76,7 +102,7 @@ describe('Authentication', function () {
         });
 
         it('should authenticate using a password', function () {
-            var token_info = {
+            const token_info = {
                 expires_in: 100
             };
             common.stubOperation('post', {statusCode: 200}, JSON.stringify(token_info));
@@ -98,7 +124,7 @@ describe('Authentication', function () {
         });
 
         it('should reject if authentication responds with an error', function () {
-            var error = 'Some error';
+            const error = 'Some error';
             common.stubOperation('post', {statusCode: 400}, '{}', error);
             common.stubReadFileSync({
                 'hosts': {
@@ -109,12 +135,12 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             expect(promise).to.be.rejectedWith(error);
         });
 
         it('should reject if authentication responds with an invalid password error', function () {
-            var error = 'Invalid username or password';
+            const error = 'Invalid username or password';
             common.stubOperation('post', {statusCode: 401}, '{}');
             common.stubReadFileSync({
                 'hosts': {
@@ -125,12 +151,12 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             expect(promise).to.be.rejectedWith(error);
         });
 
         it('should reject if authentication responds unexpectedly', function () {
-            var error = 'Unexpected response from server';
+            const error = 'Unexpected response from server';
             common.stubOperation('post', {statusCode: 400}, '{}');
             common.stubReadFileSync({
                 'hosts': {
@@ -141,7 +167,7 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             expect(promise).to.be.rejectedWith(error);
         });
     });
@@ -150,12 +176,12 @@ describe('Authentication', function () {
 
         before(function () {
             sinon.stub(jf, 'writeFileSync');
-            sinon.stub(webdriver.Builder.prototype, "forBrowser").callsFake(function() {return new webdriver.Builder();});
+            sinon.stub(webdriver.Builder.prototype, "forBrowser").callsFake(function () {return new webdriver.Builder();});
             sinon.stub(webdriver.Builder.prototype, "build").callsFake(function () {return new webdriver.WebDriver();});
             sinon.stub(webdriver.WebDriver.prototype, "get");
             sinon.stub(webdriver.WebDriver.prototype, "wait");
             sinon.stub(webdriver.WebDriver.prototype, "quit");
-            sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl").callsFake(function() {
+            sinon.stub(webdriver.WebDriver.prototype, "getCurrentUrl").callsFake(function () {
                 return new Promise(function (resolve, reject) {
                     resolve();
                 });
@@ -187,7 +213,7 @@ describe('Authentication', function () {
         });
 
         it('should reject if token authentication responds with an error', function () {
-            var error = 'Error';
+            const error = 'Error';
             common.stubOperation('post', {statusCode: 400}, '', error);
             common.stubReadFileSync({
                 'hosts': {
@@ -198,12 +224,12 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             expect(promise).to.be.rejectedWith(error);
         });
 
         it('should reject if token authentication responds with an unexpected status code', function () {
-            var error = 'Unexpected response from server';
+            const error = 'Unexpected response from server';
             common.stubOperation('post', {statusCode: 400}, '');
             common.stubReadFileSync({
                 'hosts': {
@@ -214,12 +240,12 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             expect(promise).to.be.rejectedWith(error);
         });
 
         it('should authenticate using an oauth token', function () {
-            var token_info = {expires_in: 100};
+            const token_info = {expires_in: 100};
             common.stubOperation('post', {statusCode: 200}, JSON.stringify(token_info));
             common.stubReadFileSync({
                 'hosts': {
@@ -230,7 +256,7 @@ describe('Authentication', function () {
                     }
                 }
             });
-            var promise = Auth.get_token(grunt, 'some_instance');
+            const promise = Auth.get_token(grunt, 'some_instance');
             return promise.then((instance_info) => {
                 expect(instance_info.token_info.expires_in).to.equal(100);
                 expect(instance_info.token_info.expires_on).to.equal(280000);
@@ -249,14 +275,14 @@ describe('Authentication', function () {
                 }
             }
         });
-        var promise = Auth.get_token(grunt, 'some_instance');
+        const promise = Auth.get_token(grunt, 'some_instance');
         expect(promise).to.be.rejected;
     });
 });
 
 describe('Interactive instance creation', function () {
 
-    beforeEach(function() {
+    beforeEach(function () {
         sinon.stub(jf, 'writeFileSync');
         common.stubOperation('get', {statusCode: 404}, '{}');
     });
@@ -274,7 +300,7 @@ describe('Interactive instance creation', function () {
             }
         });
         common.stubReadFileSync({'hosts': {}});
-        var promise = Auth.get_token(grunt, 'some_instance');
+        const promise = Auth.get_token(grunt, 'some_instance');
         return promise.catch(() => {});
     });
 
@@ -285,7 +311,7 @@ describe('Interactive instance creation', function () {
             }
         });
         common.stubReadFileSync({});
-        var promise = Auth.get_token(grunt, 'some_instance');
+        const promise = Auth.get_token(grunt, 'some_instance');
         return promise.catch(() => {});
     });
 

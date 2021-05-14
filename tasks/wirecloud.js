@@ -16,15 +16,15 @@
 
 'use strict';
 
-var task = require('./lib/task');
+const task = require('./lib/task');
 
 module.exports = function (grunt) {
 
-    grunt.registerMultiTask('wirecloud', 'Upload Mashable Application Components to a wirecloud instance.', function() {
-        var done = this.async();
+    grunt.registerMultiTask('wirecloud', 'Upload Mashable Application Components to a wirecloud instance.', function () {
+        const done = this.async();
 
         // Merge task-specific and/or target-specific options with these defaults.
-        var options = this.options({
+        const options = this.options({
             reporterOutput: null,
             instance: 'fiwarelab',
             overwrite: false,

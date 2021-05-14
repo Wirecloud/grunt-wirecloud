@@ -16,9 +16,9 @@
 
 "use strict";
 
-var sinon = require('sinon');
-var jf = require('jsonfile');
-var request = require('request');
+const sinon = require('sinon');
+const jf = require('jsonfile');
+const request = require('request');
 
 // Should stub get_token instead, so it is not coupled with other methods' tests
 module.exports.stubReadFileSync = function stubReadFileSync(response, error) {
@@ -37,7 +37,7 @@ module.exports.restoreReadFileSync = function restoreReadFileSync() {
 };
 
 module.exports.stubOperation = function stubOperation(method, response, body, error) {
-    var cb = function (obj, func) {func(error, response, body);};
+    const cb = function (obj, func) {func(error, response, body);};
     sinon.stub(request, method).callsFake(cb);
 };
 

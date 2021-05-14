@@ -1,0 +1,16 @@
+{
+  "extends": [
+    "plugin:mocha/recommended",
+    ".eslintrc"
+  ],
+  "env": {
+    "browser": true,
+    "mocha": true
+  },
+  "plugins": [
+    "mocha"
+  ],
+  "rules": {
+    "mocha/no-setup-in-describe": "off"
+  }
+}
