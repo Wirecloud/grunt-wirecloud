@@ -40,7 +40,6 @@ jobs:
   finish:
     needs:
       - node-unit-tests
-      - browser-unit-tests
     runs-on: ubuntu-latest
     steps:
       - name: Coveralls Finished
