@@ -1,4 +1,6 @@
 # grunt-wirecloud
+[![Coverage Status](https://coveralls.io/repos/github/Wirecloud/grunt-wirecloud/badge.svg?branch=develop)](https://coveralls.io/github/Wirecloud/grunt-wirecloud?branch=develop)
+[![Tests](https://github.com/Wirecloud/grunt-wirecloud/actions/workflows/unittests.yml/badge.svg)](https://github.com/Wirecloud/grunt-wirecloud/actions/workflows/unittests.yml)
 
 > WireCloud utilities for grunt.
 
