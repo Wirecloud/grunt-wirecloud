@@ -1,5 +1,6 @@
 /*
 * Copyright (c) 2015 CoNWeT Lab., Universidad Politécnica de Madrid
+* Copyright (c) 2021 Future Internet Consulting and Development Solutions S.L.
 *
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,14 +21,19 @@ module.exports = function(grunt) {
 
     // Project configuration.
     grunt.initConfig({
-        jshint: {
-            all: [
-                'Gruntfile.js',
-                'tasks/**/*.js',
-                'test/**/*.js'
-            ],
-            options: {
-                jshintrc: '.jshintrc'
+
+        eslint: {
+            grunt: {
+                src: "Gruntfile.js"
+            },
+            plugin: {
+                src: "tasks/**/*.js"
+            },
+            specs: {
+                options: {
+                    configFile: ".eslintrc-mocha",
+                },
+                src: 'test/**/*.spec.js',
             }
         },
 
@@ -61,19 +67,25 @@ module.exports = function(grunt) {
     grunt.loadTasks('tasks');
 
     // These plugins provide necessary tasks.
-    grunt.loadNpmTasks('grunt-contrib-jshint');
+    grunt.loadNpmTasks("gruntify-eslint");
     grunt.loadNpmTasks('grunt-contrib-clean');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-mocha-test');
 
 
-    grunt.registerTask('test', ['clean', 'mocha_istanbul']);
+    grunt.registerTask('test', [
+        'clean',
+        'mocha_istanbul'
+    ]);
 
     // Run 'node-debug grunt debug' to debug the code
     // NOTE: This requires node-inspector to be installed
     grunt.registerTask('debug', ['mochaTest']);
 
     // By default, lint and run all tests.
-    grunt.registerTask('default', ['jshint', 'test']);
+    grunt.registerTask('default', [
+        'eslint',
+        'test'
+    ]);
 
 };
